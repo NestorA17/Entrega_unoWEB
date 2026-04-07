@@ -1,0 +1,348 @@
+@page "/proyectolinea"
+@rendermode InteractiveServer
+@inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
+
+<PageTitle>Proyecto – Línea de Investigación</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+        --verde: #00c896;
+        --verde-oscuro: #00a87d;
+        --fondo: #F4F7FA;
+        --blanco: #ffffff;
+        --texto: #1a2535;
+        --texto-suave: #6b7fa3;
+        --borde: #d4dde6;
+        --rojo: #e05252;
+    }
+
+    .pl-wrapper { font-family: 'DM Sans', sans-serif; background-color: var(--fondo); min-height: 100vh; padding: 2rem; color: var(--texto); }
+    .pl-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--borde); }
+    .pl-header h1 { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--texto); margin: 0; line-height: 1; }
+    .pl-header h1 span { color: var(--verde); }
+    .pl-header p { margin: 0.3rem 0 0; font-size: 0.9rem; color: var(--texto-suave); font-weight: 300; }
+
+    .btn-nuevo { background-color: var(--verde); color: white; border: none; padding: 0.65rem 1.4rem; border-radius: 10px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+    .btn-nuevo:hover { background-color: var(--verde-oscuro); transform: translateY(-1px); }
+
+    .alerta { padding: 0.9rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.9rem; font-weight: 500; }
+    .alerta.exito { background: #e6f9ee; color: #15803d; border: 1px solid #bbf7d0; }
+    .alerta.error { background: #fdeaea; color: #b83232; border: 1px solid #f5c0c0; }
+
+    .tabla-card { background: var(--blanco); border-radius: 16px; border: 1px solid var(--borde); overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead { background-color: #1a3320; color: white; }
+    thead th { padding: 1rem 1.2rem; text-align: left; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    tbody tr { border-bottom: 1px solid var(--borde); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background-color: #f0fdf8; }
+    tbody td { padding: 0.9rem 1.2rem; color: var(--texto); vertical-align: middle; }
+
+    .id-badge { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; background: #e8f5e9; color: #2e7d32; padding: 0.2rem 0.6rem; border-radius: 6px; display: inline-block; }
+
+    .acciones { display: flex; gap: 0.5rem; }
+    .btn-editar { background: #fff8e1; color: #b8860b; border: 1px solid #f5c842; padding: 0.35rem 0.8rem; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+    .btn-editar:hover { background: #fff3c0; }
+    .btn-eliminar { background: #fdeaea; color: var(--rojo); border: 1px solid #f5c0c0; padding: 0.35rem 0.8rem; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+    .btn-eliminar:hover { background: #fbd5d5; }
+
+    .sin-datos { text-align: center; padding: 3rem; color: var(--texto-suave); font-size: 0.95rem; }
+    .cargando { text-align: center; padding: 3rem; color: var(--texto-suave); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: var(--blanco) !important; border-radius: 18px !important; padding: 2rem !important; width: 100% !important; max-width: 520px !important; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important; animation: slideUp 0.25s ease; display: block !important; visibility: visible !important; z-index: 1001 !important; position: relative !important; }
+    @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin: 0 0 1.5rem; color: var(--texto); }
+    .modal h2 span { color: var(--verde); }
+
+    .campo { margin-bottom: 1.1rem !important; display: block !important; }
+    .campo label { display: block !important; font-size: 0.8rem !important; font-weight: 500 !important; color: var(--texto-suave) !important; margin-bottom: 0.4rem !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; }
+    .campo select { width: 100% !important; padding: 0.65rem 0.9rem !important; border: 1.5px solid var(--borde) !important; border-radius: 9px !important; font-family: 'DM Sans', sans-serif !important; font-size: 0.9rem !important; color: var(--texto) !important; background: var(--fondo) !important; box-sizing: border-box !important; display: block !important; min-height: 40px !important; }
+    .campo select:focus { outline: none !important; border-color: var(--verde) !important; background: white !important; }
+
+    .modal-acciones { display: flex; gap: 0.8rem; margin-top: 1.5rem; justify-content: flex-end; }
+    .btn-guardar { background: var(--verde); color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 9px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+    .btn-guardar:hover { background: var(--verde-oscuro); }
+    .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-cancelar { background: transparent; color: var(--texto-suave); border: 1.5px solid var(--borde); padding: 0.65rem 1.2rem; border-radius: 9px; font-size: 0.9rem; cursor: pointer; }
+    .btn-cancelar:hover { border-color: var(--texto-suave); }
+
+    .modal-confirmar p { color: var(--texto-suave); font-size: 0.93rem; margin: 0.5rem 0 1.5rem; }
+    .modal-confirmar strong { color: var(--texto); }
+    .btn-confirmar-eliminar { background: var(--rojo); color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 9px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+    .btn-confirmar-eliminar:hover { background: #c94040; }
+</style>
+
+<div class="pl-wrapper">
+
+    <div class="pl-header">
+        <div>
+            <h1>Proyecto – <span>Línea de Investigación</span></h1>
+            <p>Relación entre proyectos y sus líneas de investigación</p>
+        </div>
+        <button class="btn-nuevo" @onclick="AbrirModalNuevo">＋ Nueva Relación</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeAlerta))
+    {
+        <div class="alerta @(esExito ? "exito" : "error")">
+            @(esExito ? "✓" : "✕") @mensajeAlerta
+        </div>
+    }
+
+    <div class="tabla-card">
+        @if (cargando)
+        {
+            <div class="cargando">Cargando registros...</div>
+        }
+        else if (!registros.Any())
+        {
+            <div class="sin-datos">No hay relaciones registradas aún.</div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Proyecto</th>
+                        <th>Título Proyecto</th>
+                        <th>ID Línea</th>
+                        <th>Nombre Línea</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var reg in registros)
+                    {
+                        <tr>
+                            <td><span class="id-badge">@reg["proyecto"]</span></td>
+                            <td>@ObtenerTituloProyecto(reg["proyecto"]?.ToString())</td>
+                            <td><span class="id-badge">@reg["linea_investigacion"]</span></td>
+                            <td>@ObtenerNombreLinea(reg["linea_investigacion"]?.ToString())</td>
+                            <td>
+                                <div class="acciones">
+                                    <button class="btn-editar" @onclick="() => AbrirModalEditar(reg)">✎ Editar</button>
+                                    <button class="btn-eliminar" @onclick="() => AbrirModalEliminar(reg)">✕ Eliminar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    @* ── MODAL CREAR / EDITAR ── *@
+    @if (mostrarModal)
+    {
+        <div class="modal-overlay">
+            <div class="modal">
+                <h2>@(esEdicion ? "Editar" : "Nueva") <span>Relación</span></h2>
+
+                @if (cargandoFks)
+                {
+                    <p style="color:var(--texto-suave)">Cargando opciones...</p>
+                }
+                else
+                {
+                    <div class="campo">
+                        <label>Proyecto *</label>
+                        <select @bind="campoProyecto" disabled="@esEdicion">
+                            <option value="">-- Seleccione un proyecto --</option>
+                            @foreach (var p in proyectos)
+                            {
+                                <option value="@p["id"]">@p["id"] – @p["titulo"]</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label>Línea de Investigación *</label>
+                        <select @bind="campoLinea">
+                            <option value="">-- Seleccione una línea --</option>
+                            @foreach (var l in lineas)
+                            {
+                                <option value="@l["id"]">@l["id"] – @l["nombre"]</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="CerrarModal">Cancelar</button>
+                    <button class="btn-guardar" @onclick="Guardar" disabled="@(guardando || cargandoFks)">
+                        @(guardando ? "Guardando..." : (esEdicion ? "Actualizar" : "Crear"))
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── MODAL ELIMINAR ── *@
+    @if (mostrarModalEliminar)
+    {
+        <div class="modal-overlay">
+            <div class="modal modal-confirmar">
+                <h2>Eliminar <span>Relación</span></h2>
+                <p>¿Estás seguro de eliminar la relación <strong>Proyecto @idProyectoEliminar → Línea @idLineaEliminar</strong>? Esta acción no se puede deshacer.</p>
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="() => mostrarModalEliminar = false">Cancelar</button>
+                    <button class="btn-confirmar-eliminar" @onclick="Eliminar" disabled="@guardando">
+                        @(guardando ? "Eliminando..." : "Sí, eliminar")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<Dictionary<string, object?>> registros = new();
+    private List<Dictionary<string, object?>> proyectos = new();
+    private List<Dictionary<string, object?>> lineas = new();
+
+    private bool cargando = true;
+    private bool cargandoFks = false;
+    private bool mostrarModal = false;
+    private bool mostrarModalEliminar = false;
+    private bool esEdicion = false;
+    private bool guardando = false;
+    private string mensajeAlerta = "";
+    private bool esExito = true;
+
+    private string campoProyecto = "";
+    private string campoLinea = "";
+
+    // Para eliminar
+    private string idProyectoEliminar = "";
+    private string idLineaEliminar = "";
+    // Clave compuesta original (para edición)
+    private string originalProyecto = "";
+    private string originalLinea = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(CargarRegistros(), CargarFks());
+    }
+
+    private async Task CargarRegistros()
+    {
+        cargando = true;
+        registros = await Api.ListarAsync("proyecto_linea");
+        cargando = false;
+    }
+
+    private async Task CargarFks()
+    {
+        cargandoFks = true;
+        proyectos = await Api.ListarAsync("proyecto");
+        lineas = await Api.ListarAsync("linea_investigacion");
+        cargandoFks = false;
+    }
+
+    private void MostrarAlerta(bool exito, string mensaje)
+    {
+        esExito = exito;
+        mensajeAlerta = mensaje;
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            mensajeAlerta = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void AbrirModalNuevo()
+    {
+        esEdicion = false;
+        campoProyecto = "";
+        campoLinea = "";
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEditar(Dictionary<string, object?> reg)
+    {
+        esEdicion = true;
+        originalProyecto = reg["proyecto"]?.ToString() ?? "";
+        originalLinea    = reg["linea_investigacion"]?.ToString() ?? "";
+        campoProyecto    = originalProyecto;
+        campoLinea       = originalLinea;
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEliminar(Dictionary<string, object?> reg)
+    {
+        idProyectoEliminar = reg["proyecto"]?.ToString() ?? "";
+        idLineaEliminar    = reg["linea_investigacion"]?.ToString() ?? "";
+        mostrarModalEliminar = true;
+    }
+
+    private void CerrarModal() => mostrarModal = false;
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrEmpty(campoProyecto) || string.IsNullOrEmpty(campoLinea))
+        {
+            MostrarAlerta(false, "Debe seleccionar un proyecto y una línea de investigación.");
+            return;
+        }
+
+        guardando = true;
+        (bool exito, string mensaje) resultado;
+
+        if (esEdicion)
+        {
+            // Eliminar la relación anterior y crear la nueva (tabla pivote sin PK propia)
+            await Api.EliminarAsync("proyecto_linea", "proyecto", originalProyecto);
+            var datos = new Dictionary<string, object?>
+            {
+                ["proyecto"]           = campoProyecto,
+                ["linea_investigacion"] = campoLinea
+            };
+            resultado = await Api.CrearAsync("proyecto_linea", datos);
+        }
+        else
+        {
+            var datos = new Dictionary<string, object?>
+            {
+                ["proyecto"]           = campoProyecto,
+                ["linea_investigacion"] = campoLinea
+            };
+            resultado = await Api.CrearAsync("proyecto_linea", datos);
+        }
+
+        guardando = false;
+        mostrarModal = false;
+        MostrarAlerta(resultado.exito, resultado.mensaje);
+
+        if (resultado.exito)
+            await CargarRegistros();
+    }
+
+    private async Task Eliminar()
+    {
+        guardando = true;
+        var resultado = await Api.EliminarAsync("proyecto_linea", "proyecto", idProyectoEliminar);
+        guardando = false;
+        mostrarModalEliminar = false;
+        MostrarAlerta(resultado.exito, resultado.mensaje);
+        if (resultado.exito) await CargarRegistros();
+    }
+
+    private string ObtenerTituloProyecto(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return "";
+        var p = proyectos.FirstOrDefault(x => x["id"]?.ToString() == id);
+        return p?["titulo"]?.ToString() ?? id;
+    }
+
+    private string ObtenerNombreLinea(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return "";
+        var l = lineas.FirstOrDefault(x => x["id"]?.ToString() == id);
+        return l?["nombre"]?.ToString() ?? id;
+    }
+}
