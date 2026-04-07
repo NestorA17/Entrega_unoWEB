@@ -1,0 +1,639 @@
+@page "/aliado"
+@rendermode InteractiveServer
+@inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
+
+<PageTitle>Gestión de Aliados</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+        --verde: #00C896;
+        --verde-oscuro: #009e76;
+        --fondo: #F4F7F5;
+        --blanco: #ffffff;
+        --texto: #1a2e25;
+        --texto-suave: #6b8c7a;
+        --borde: #d4e6dd;
+        --rojo: #e05252;
+        --amarillo: #f5c842;
+    }
+
+    .aliado-wrapper {
+        font-family: 'DM Sans', sans-serif;
+        background-color: var(--fondo);
+        min-height: 100vh;
+        padding: 2rem;
+        color: var(--texto);
+    }
+
+    .aliado-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid var(--borde);
+    }
+
+    .aliado-header h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--texto);
+        margin: 0;
+        line-height: 1;
+    }
+
+    .aliado-header h1 span {
+        color: var(--verde);
+    }
+
+    .aliado-header p {
+        margin: 0.3rem 0 0;
+        font-size: 0.9rem;
+        color: var(--texto-suave);
+        font-weight: 300;
+    }
+
+    /* BOTÓN NUEVO */
+    .btn-nuevo {
+        background-color: var(--verde);
+        color: white;
+        border: none;
+        padding: 0.65rem 1.4rem;
+        border-radius: 10px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-nuevo:hover {
+        background-color: var(--verde-oscuro);
+        transform: translateY(-1px);
+    }
+
+    /* ALERTA */
+    .alerta {
+        padding: 0.9rem 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .alerta.exito {
+        background: #e6faf4;
+        color: #007a57;
+        border: 1px solid #b3e8d5;
+    }
+
+    .alerta.error {
+        background: #fdeaea;
+        color: #b83232;
+        border: 1px solid #f5c0c0;
+    }
+
+    /* TABLA */
+    .tabla-card {
+        background: var(--blanco);
+        border-radius: 16px;
+        border: 1px solid var(--borde);
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+
+    thead {
+        background-color: var(--texto);
+        color: white;
+    }
+
+    thead th {
+        padding: 1rem 1.2rem;
+        text-align: left;
+        font-family: 'Syne', sans-serif;
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    tbody tr {
+        border-bottom: 1px solid var(--borde);
+        transition: background 0.15s;
+    }
+
+    tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    tbody tr:hover {
+        background-color: #f0faf5;
+    }
+
+    tbody td {
+        padding: 0.9rem 1.2rem;
+        color: var(--texto);
+        vertical-align: middle;
+    }
+
+    .nit-badge {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.82rem;
+        background: #e6faf4;
+        color: var(--verde-oscuro);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        display: inline-block;
+    }
+
+    .acciones {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-editar {
+        background: #fff8e1;
+        color: #b8860b;
+        border: 1px solid #f5c842;
+        padding: 0.35rem 0.8rem;
+        border-radius: 7px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .btn-editar:hover { background: #fff3c0; }
+
+    .btn-eliminar {
+        background: #fdeaea;
+        color: var(--rojo);
+        border: 1px solid #f5c0c0;
+        padding: 0.35rem 0.8rem;
+        border-radius: 7px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .btn-eliminar:hover { background: #fbd5d5; }
+
+    .sin-datos {
+        text-align: center;
+        padding: 3rem;
+        color: var(--texto-suave);
+        font-size: 0.95rem;
+    }
+
+    .cargando {
+        text-align: center;
+        padding: 3rem;
+        color: var(--texto-suave);
+    }
+
+    /* MODAL */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+       
+    }
+
+    .modal {
+        background: var(--blanco);
+        border-radius: 18px;
+        padding: 2rem;
+        width: 100%;
+        max-width: 520px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        animation: slideUp 0.25s ease;
+    }
+
+    @@keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .modal h2 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0 0 1.5rem;
+        color: var(--texto);
+    }
+
+    .modal h2 span { color: var(--verde); }
+
+.campo {
+    margin-bottom: 1.1rem !important;
+    display: block !important;
+}
+
+.campo label {
+    display: block !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    color: var(--texto-suave) !important;
+    margin-bottom: 0.4rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+}
+
+.campo input {
+    width: 100% !important;
+    padding: 0.65rem 0.9rem !important;
+    border: 1.5px solid var(--borde) !important;
+    border-radius: 9px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.9rem !important;
+    color: var(--texto) !important;
+    background: var(--fondo) !important;
+    transition: border 0.2s !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.campo input:focus {
+    outline: none !important;
+    border-color: var(--verde) !important;
+    background: white !important;
+}
+
+.campo input:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+.modal {
+    background: var(--blanco) !important;
+    border-radius: 18px !important;
+    padding: 2rem !important;
+    width: 100% !important;
+    max-width: 520px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important;
+    animation: slideUp 0.25s ease !important;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 1001 !important;
+    position: relative !important;
+}
+
+    .btn-guardar {
+        background: var(--verde);
+        color: white;
+        border: none;
+        padding: 0.65rem 1.5rem;
+        border-radius: 9px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-guardar:hover { background: var(--verde-oscuro); }
+    .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-cancelar {
+        background: transparent;
+        color: var(--texto-suave);
+        border: 1.5px solid var(--borde);
+        padding: 0.65rem 1.2rem;
+        border-radius: 9px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: border 0.2s;
+    }
+
+    .btn-cancelar:hover { border-color: var(--texto-suave); }
+
+    /* CONFIRMAR ELIMINACIÓN */
+    .modal-confirmar p {
+        color: var(--texto-suave);
+        font-size: 0.93rem;
+        margin: 0.5rem 0 1.5rem;
+    }
+
+    .modal-confirmar strong {
+        color: var(--texto);
+    }
+
+    .btn-confirmar-eliminar {
+        background: var(--rojo);
+        color: white;
+        border: none;
+        padding: 0.65rem 1.5rem;
+        border-radius: 9px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-confirmar-eliminar:hover { background: #c94040; }
+</style>
+
+<div class="aliado-wrapper">
+
+    <!-- ENCABEZADO -->
+    <div class="aliado-header">
+        <div>
+            <h1>Gestión de <span>Aliados</span></h1>
+            <p>Empresas e instituciones colaboradoras en proyectos de investigación</p>
+        </div>
+        <button class="btn-nuevo" @onclick="AbrirModalNuevo">
+            ＋ Nuevo Aliado
+        </button>
+    </div>
+
+    <!-- ALERTA -->
+    @if (!string.IsNullOrEmpty(mensajeAlerta))
+    {
+        <div class="alerta @(esExito ? "exito" : "error")">
+            @(esExito ? "✓" : "✕") @mensajeAlerta
+        </div>
+    }
+
+    <!-- TABLA -->
+    <div class="tabla-card">
+        @if (cargando)
+        {
+            <div class="cargando">Cargando aliados...</div>
+        }
+        else if (aliados.Count == 0)
+        {
+            <div class="sin-datos">No hay aliados registrados aún.</div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIT</th>
+                        <th>Razón Social</th>
+                        <th>Contacto</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Ciudad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var aliado in aliados)
+                    {
+                        <tr>
+                            <td><span class="nit-badge">@Valor(aliado, "nit")</span></td>
+                            <td>@Valor(aliado, "razon_social")</td>
+                            <td>@Valor(aliado, "nombre_contacto")</td>
+                            <td>@Valor(aliado, "correo")</td>
+                            <td>@Valor(aliado, "telefono")</td>
+                            <td>@Valor(aliado, "ciudad")</td>
+                            <td>
+                                <div class="acciones">
+                                    <button class="btn-editar" @onclick="() => AbrirModalEditar(aliado)">
+                                        ✎ Editar
+                                    </button>
+                                    <button class="btn-eliminar" @onclick="() => AbrirModalEliminar(aliado)">
+                                        ✕ Eliminar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <!-- MODAL CREAR / EDITAR -->
+    @if (mostrarModal)
+    {
+        <div class="modal-overlay">
+            <div class="modal">
+                <h2>@(esEdicion ? "Editar" : "Nuevo") <span>Aliado</span></h2>
+
+                <div class="campo">
+                    <label>NIT *</label>
+                    <input type="text" @bind="form_nit" placeholder="Ej: 900123456"
+                           disabled="@esEdicion" />
+                </div>
+                <div class="campo">
+                    <label>Razón Social *</label>
+                    <input type="text" @bind="form_razon_social" placeholder="Nombre de la empresa" />
+                </div>
+                <div class="campo">
+                    <label>Nombre Contacto *</label>
+                    <input type="text" @bind="form_nombre_contacto" placeholder="Persona de contacto" />
+                </div>
+                <div class="campo">
+                    <label>Correo *</label>
+                    <input type="email" @bind="form_correo" placeholder="correo@empresa.com" />
+                </div>
+                <div class="campo">
+                    <label>Teléfono *</label>
+                    <input type="text" @bind="form_telefono" placeholder="Ej: 3001234567" />
+                </div>
+                <div class="campo">
+                    <label>Ciudad *</label>
+                    <input type="text" @bind="form_ciudad" placeholder="Ej: Medellín" />
+                </div>
+
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="CerrarModal">Cancelar</button>
+                    <button class="btn-guardar" @onclick="Guardar" disabled="@guardando">
+                        @(guardando ? "Guardando..." : (esEdicion ? "Actualizar" : "Crear"))
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- MODAL CONFIRMAR ELIMINACIÓN -->
+    @if (mostrarModalEliminar)
+    {
+        <div class="modal-overlay">
+            <div class="modal modal-confirmar">
+                <h2>Eliminar <span>Aliado</span></h2>
+                <p>¿Estás seguro de que deseas eliminar a <strong>@nitEliminar</strong>? Esta acción no se puede deshacer.</p>
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="() => mostrarModalEliminar = false">Cancelar</button>
+                    <button class="btn-confirmar-eliminar" @onclick="Eliminar" disabled="@guardando">
+                        @(guardando ? "Eliminando..." : "Sí, eliminar")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+
+
+</div>
+
+@code {
+    // ─── ESTADO ───────────────────────────────────────
+    private List<Dictionary<string, object?>> aliados = new();
+    private bool cargando = true;
+    private bool mostrarModal = false;
+    private bool mostrarModalEliminar = false;
+    private bool esEdicion = false;
+    private bool guardando = false;
+    private string mensajeAlerta = "";
+    private bool esExito = true;
+
+    // ─── CAMPOS DEL FORMULARIO ─────────────────────────
+    private string form_nit = "";
+    private string form_razon_social = "";
+    private string form_nombre_contacto = "";
+    private string form_correo = "";
+    private string form_telefono = "";
+    private string form_ciudad = "";
+
+    // ─── PARA ELIMINAR ─────────────────────────────────
+    private string nitEliminar = "";
+
+    // ─── CICLO DE VIDA ─────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAliados();
+    }
+
+    private async Task CargarAliados()
+    {
+        cargando = true;
+        aliados = await Api.ListarAsync("aliado");
+        cargando = false;
+    }
+
+    // ─── HELPERS ───────────────────────────────────────
+    private string Valor(Dictionary<string, object?> fila, string clave)
+    {
+        return fila.TryGetValue(clave, out var val) ? val?.ToString() ?? "" : "";
+    }
+
+    private void MostrarAlerta(bool exito, string mensaje)
+    {
+        esExito = exito;
+        mensajeAlerta = mensaje;
+        // Limpiar alerta después de 4 segundos
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            mensajeAlerta = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    // ─── MODAL NUEVO ───────────────────────────────────
+    private void AbrirModalNuevo()
+    {
+        esEdicion = false;
+        form_nit = "";
+        form_razon_social = "";
+        form_nombre_contacto = "";
+        form_correo = "";
+        form_telefono = "";
+        form_ciudad = "";
+        mostrarModal = true;
+    }
+
+    // ─── MODAL EDITAR ──────────────────────────────────
+    private void AbrirModalEditar(Dictionary<string, object?> aliado)
+    {
+        esEdicion = true;
+        form_nit             = Valor(aliado, "nit");
+        form_razon_social    = Valor(aliado, "razon_social");
+        form_nombre_contacto = Valor(aliado, "nombre_contacto");
+        form_correo          = Valor(aliado, "correo");
+        form_telefono        = Valor(aliado, "telefono");
+        form_ciudad          = Valor(aliado, "ciudad");
+        mostrarModal = true;
+    }
+
+    // ─── MODAL ELIMINAR ────────────────────────────────
+    private void AbrirModalEliminar(Dictionary<string, object?> aliado)
+    {
+        nitEliminar = Valor(aliado, "nit");
+        mostrarModalEliminar = true;
+    }
+
+    private void CerrarModal() => mostrarModal = false;
+
+    // ─── GUARDAR (CREAR O ACTUALIZAR) ──────────────────
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(form_nit) ||
+            string.IsNullOrWhiteSpace(form_razon_social) ||
+            string.IsNullOrWhiteSpace(form_nombre_contacto) ||
+            string.IsNullOrWhiteSpace(form_correo) ||
+            string.IsNullOrWhiteSpace(form_telefono) ||
+            string.IsNullOrWhiteSpace(form_ciudad))
+        {
+            MostrarAlerta(false, "Todos los campos son obligatorios.");
+            return;
+        }
+
+        guardando = true;
+
+        var datos = new Dictionary<string, object?>
+        {
+            ["nit"]              = form_nit,
+            ["razon_social"]     = form_razon_social,
+            ["nombre_contacto"]  = form_nombre_contacto,
+            ["correo"]           = form_correo,
+            ["telefono"]         = form_telefono,
+            ["ciudad"]           = form_ciudad
+        };
+
+        (bool exito, string mensaje) resultado;
+
+        if (esEdicion)
+            resultado = await Api.ActualizarAsync("aliado", "nit", form_nit, datos);
+        else
+            resultado = await Api.CrearAsync("aliado", datos);
+
+        guardando = false;
+        mostrarModal = false;
+        MostrarAlerta(resultado.exito, resultado.mensaje);
+
+        if (resultado.exito)
+            await CargarAliados();
+    }
+
+    // ─── ELIMINAR ──────────────────────────────────────
+    private async Task Eliminar()
+    {
+        guardando = true;
+        var resultado = await Api.EliminarAsync("aliado", "nit", nitEliminar);
+        guardando = false;
+        mostrarModalEliminar = false;
+        MostrarAlerta(resultado.exito, resultado.mensaje);
+
+        if (resultado.exito)
+            await CargarAliados();
+    }
+}

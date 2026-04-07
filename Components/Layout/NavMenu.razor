@@ -1,0 +1,77 @@
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">CRUD Mapa Conocimiento</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+
+        @* Link a la pagina de inicio *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        @* Módulo Mapa de Conocimiento *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="aliado">
+                <span class="bi bi-people" aria-hidden="true"></span> Aliados
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="proyecto">
+                <span class="bi bi-people" aria-hidden="true"></span> Proyectos
+            </NavLink>
+        </div>
+
+<div class="nav-item px-3">
+    <NavLink class="nav-link" href="tipoproducto">
+        <span class="bi bi-tag" aria-hidden="true"></span> Tipos de Producto
+    </NavLink>
+</div>
+
+        @* ── OCULTOS TEMPORALMENTE ──────────────────────────
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="empresa">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Empresa
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="persona">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Persona
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="producto">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Producto
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="rol">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Rol
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="ruta">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Ruta
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="usuario">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Usuario
+            </NavLink>
+        </div>
+        ── FIN OCULTOS ──────────────────────────────────── *@
+
+    </nav>
+</div>

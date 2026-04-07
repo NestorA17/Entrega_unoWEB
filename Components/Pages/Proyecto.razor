@@ -1,0 +1,837 @@
+@page "/proyecto"
+@rendermode InteractiveServer
+@inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
+
+<PageTitle>Gestión de Proyectos</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+        --azul: #3B82F6;
+        --azul-oscuro: #2563EB;
+        --fondo: #F4F7FA;
+        --blanco: #ffffff;
+        --texto: #1a2535;
+        --texto-suave: #6b7fa3;
+        --borde: #d4dde6;
+        --rojo: #e05252;
+    }
+
+    .proyecto-wrapper { font-family: 'DM Sans', sans-serif; background-color: var(--fondo); min-height: 100vh; padding: 2rem; color: var(--texto); }
+    .proyecto-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--borde); }
+    .proyecto-header h1 { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--texto); margin: 0; line-height: 1; }
+    .proyecto-header h1 span { color: var(--azul); }
+    .proyecto-header p { margin: 0.3rem 0 0; font-size: 0.9rem; color: var(--texto-suave); font-weight: 300; }
+
+    .btn-nuevo { background-color: var(--azul); color: white; border: none; padding: 0.65rem 1.4rem; border-radius: 10px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+    .btn-nuevo:hover { background-color: var(--azul-oscuro); transform: translateY(-1px); }
+
+    .alerta { padding: 0.9rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.9rem; font-weight: 500; }
+    .alerta.exito { background: #e6f9ee; color: #15803d; border: 1px solid #bbf7d0; }
+    .alerta.error { background: #fdeaea; color: #b83232; border: 1px solid #f5c0c0; }
+
+    .tabla-card { background: var(--blanco); border-radius: 16px; border: 1px solid var(--borde); overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead { background-color: var(--texto); color: white; }
+    thead th { padding: 1rem 1.2rem; text-align: left; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    tbody tr { border-bottom: 1px solid var(--borde); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background-color: #f0f6ff; }
+    tbody td { padding: 0.9rem 1.2rem; color: var(--texto); vertical-align: middle; }
+
+    .id-badge { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; background: #dbeafe; color: var(--azul-oscuro); padding: 0.2rem 0.6rem; border-radius: 6px; display: inline-block; }
+    .financiacion-badge { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+    .titulo-cell { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+    .resumen-cell { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--texto-suave); font-size: 0.83rem; }
+    .tag-cell { font-size: 0.78rem; background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; padding: 0.15rem 0.55rem; border-radius: 20px; display: inline-block; }
+
+    .acciones { display: flex; gap: 0.5rem; }
+    .btn-editar { background: #fff8e1; color: #b8860b; border: 1px solid #f5c842; padding: 0.35rem 0.8rem; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+    .btn-editar:hover { background: #fff3c0; }
+    .btn-eliminar { background: #fdeaea; color: var(--rojo); border: 1px solid #f5c0c0; padding: 0.35rem 0.8rem; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+    .btn-eliminar:hover { background: #fbd5d5; }
+
+    .sin-datos { text-align: center; padding: 3rem; color: var(--texto-suave); font-size: 0.95rem; }
+    .cargando { text-align: center; padding: 3rem; color: var(--texto-suave); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal { background: var(--blanco) !important; border-radius: 18px !important; padding: 2rem !important; width: 100% !important; max-width: 650px !important; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important; animation: slideUp 0.25s ease; display: block !important; visibility: visible !important; z-index: 1001 !important; position: relative !important; }
+
+    @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin: 0 0 1.5rem; color: var(--texto); }
+    .modal h2 span { color: var(--azul); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+    .campo-full { grid-column: 1 / -1; }
+
+    .campo { margin-bottom: 1.1rem !important; display: block !important; }
+    .campo label { display: block !important; font-size: 0.8rem !important; font-weight: 500 !important; color: var(--texto-suave) !important; margin-bottom: 0.4rem !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; }
+    .campo input, .campo select, .campo textarea { width: 100% !important; padding: 0.65rem 0.9rem !important; border: 1.5px solid var(--borde) !important; border-radius: 9px !important; font-family: 'DM Sans', sans-serif !important; font-size: 0.9rem !important; color: var(--texto) !important; background: var(--fondo) !important; box-sizing: border-box !important; display: block !important; visibility: visible !important; opacity: 1 !important; }
+    .campo textarea { resize: vertical; min-height: 80px; }
+    .campo input:focus, .campo select:focus, .campo textarea:focus { outline: none !important; border-color: var(--azul) !important; background: white !important; }
+    .campo input:disabled { opacity: 0.6 !important; cursor: not-allowed !important; }
+
+    .seccion-relaciones { grid-column: 1 / -1; border-top: 1px solid var(--borde); padding-top: 1rem; margin-top: 0.5rem; }
+    .seccion-titulo { font-size: 0.8rem; font-weight: 800; color: var(--azul); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+
+    .resumen-dinamico { grid-column: 1 / -1; background: #f0f6ff; padding: 0.8rem; border-radius: 8px; font-size: 0.82rem; border-left: 4px solid var(--azul); color: var(--texto); margin-top: 0.3rem; }
+
+    .modal-acciones { display: flex; gap: 0.8rem; margin-top: 1.5rem; justify-content: flex-end; }
+    .btn-guardar { background: var(--azul); color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 9px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+    .btn-guardar:hover { background: var(--azul-oscuro); }
+    .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-cancelar { background: transparent; color: var(--texto-suave); border: 1.5px solid var(--borde); padding: 0.65rem 1.2rem; border-radius: 9px; font-size: 0.9rem; cursor: pointer; }
+    .btn-cancelar:hover { border-color: var(--texto-suave); }
+
+    .modal-confirmar p { color: var(--texto-suave); font-size: 0.93rem; margin: 0.5rem 0 1.5rem; }
+    .modal-confirmar strong { color: var(--texto); }
+    .btn-confirmar-eliminar { background: var(--rojo); color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 9px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+    .btn-confirmar-eliminar:hover { background: #c94040; }
+
+    /* ── Barra de filtros ── */
+    .filtros-bar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem; flex-wrap: wrap; }
+    .filtro-grupo { display: flex; flex-direction: column; gap: 0.3rem; min-width: 200px; }
+    .filtro-grupo label { font-size: 0.75rem; font-weight: 600; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.04em; }
+    .filtro-grupo select { padding: 0.55rem 0.9rem; border: 1.5px solid var(--borde); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--texto); background: var(--blanco); cursor: pointer; }
+    .filtro-grupo select:focus { outline: none; border-color: var(--azul); }
+    .filtro-grupo select.activo { border-color: var(--azul); background: #eff6ff; color: var(--azul-oscuro); font-weight: 600; }
+    .btn-limpiar { background: transparent; border: 1.5px solid var(--borde); color: var(--texto-suave); padding: 0.55rem 1rem; border-radius: 9px; font-size: 0.82rem; cursor: pointer; align-self: flex-end; white-space: nowrap; }
+    .btn-limpiar:hover { border-color: var(--rojo); color: var(--rojo); }
+    .contador-filtro { align-self: flex-end; font-size: 0.82rem; color: var(--texto-suave); padding-bottom: 0.1rem; }
+    .contador-filtro strong { color: var(--azul-oscuro); font-weight: 700; }
+</style>
+
+<div class="proyecto-wrapper">
+
+    <div class="proyecto-header">
+        <div>
+            <h1>Gestión de <span>Proyectos</span></h1>
+            <p>Proyectos de investigación con su financiación y duración</p>
+        </div>
+        <button class="btn-nuevo" @onclick="AbrirModalNuevo">＋ Nuevo Proyecto</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeAlerta))
+    {
+        <div class="alerta @(esExito ? "exito" : "error")">
+            @(esExito ? "✓" : "✕") @mensajeAlerta
+        </div>
+    }
+
+   
+    <div class="filtros-bar">
+
+       
+        <div class="filtro-grupo">
+            <label>📁 Proyecto</label>
+            <select class="@(filtroProyectoId != "" ? "activo" : "")"
+                    @bind="filtroProyectoId" @bind:after="AplicarFiltros">
+                <option value="">-- Seleccione --</option>
+                @foreach (var p in proyectos)
+                {
+                    <option value="@Valor(p, "id")">@Valor(p, "titulo") (@Valor(p, "id"))</option>
+                }
+            </select>
+        </div>
+
+        <div class="filtro-grupo">
+            <label>🎓 Área de Conocimiento</label>
+            <select class="@(filtroArea != "" ? "activo" : "")"
+                    @bind="filtroArea" @bind:after="AplicarFiltros">
+                <option value="">Todas las áreas</option>
+                @foreach (var ac in listaAreas)
+                {
+                    <option value="@Valor(ac, "id")">@Valor(ac, "disciplina")</option>
+                }
+            </select>
+        </div>
+
+        <div class="filtro-grupo">
+            <label>🌍 ODS</label>
+            <select class="@(filtroOds != "" ? "activo" : "")"
+                    @bind="filtroOds" @bind:after="AplicarFiltros">
+                <option value="">Todos los ODS</option>
+                @foreach (var ods in listaODS)
+                {
+                    <option value="@Valor(ods, "id")">@Valor(ods, "nombre")</option>
+                }
+            </select>
+        </div>
+
+        <div class="filtro-grupo">
+            <label>🔑 Término Clave</label>
+            <select class="@(filtroTermino != "" ? "activo" : "")"
+                    @bind="filtroTermino" @bind:after="AplicarFiltros">
+                <option value="">Todos los términos</option>
+                @foreach (var tc in listaKeywords)
+                {
+                    <option value="@Valor(tc, "termino")">@Valor(tc, "termino_ingles")</option>
+                }
+            </select>
+        </div>
+
+        @if (filtroProyectoId != "" || filtroArea != "" || filtroOds != "" || filtroTermino != "")
+        {
+            <button class="btn-limpiar" @onclick="LimpiarFiltros">✕ Limpiar filtros</button>
+            <span class="contador-filtro">
+                Mostrando <strong>@proyectosFiltrados.Count</strong> de @proyectos.Count proyectos
+            </span>
+        }
+
+    </div>
+
+    <div class="tabla-card">
+        @if (cargando)
+        {
+            <div class="cargando">Cargando proyectos...</div>
+        }
+        else if (proyectosFiltrados.Count == 0)
+        {
+            <div class="sin-datos">
+                @(proyectos.Count == 0 ? "No hay proyectos registrados aún." : "Ningún proyecto coincide con los filtros seleccionados.")
+            </div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Resumen</th>
+                        <th>Presupuesto</th>
+                        <th>Tipo Financiación</th>
+                        <th>Tipo Fondos</th>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Área Conocimiento</th>
+                        <th>ODS</th>
+                        <th>Palabras Clave</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var proyecto in proyectosFiltrados)
+                    {
+                        var idProyecto = Valor(proyecto, "id");
+
+                        <tr>
+                            <td><span class="id-badge">@idProyecto</span></td>
+                            <td><div class="titulo-cell" title="@Valor(proyecto, "titulo")">@Valor(proyecto, "titulo")</div></td>
+                            <td><div class="resumen-cell" title="@Valor(proyecto, "resumen")">@Valor(proyecto, "resumen")</div></td>
+                            <td>$@Valor(proyecto, "presupuesto")</td>
+                            <td><span class="financiacion-badge">@Valor(proyecto, "tipo_financiacion")</span></td>
+                            <td>@Valor(proyecto, "tipo_fondos")</td>
+                            <td>@Valor(proyecto, "fecha_inicio")</td>
+                            <td>@Valor(proyecto, "fecha_fin")</td>
+
+                            
+                            <td>
+                                @if (relacionesArea.TryGetValue(idProyecto, out var areas))
+                                {
+                                    @foreach (var a in areas)
+                                    {
+                                        <span class="tag-cell">@a</span>
+                                    }
+                                }
+                            </td>
+
+                           
+                            <td>
+                                @if (relacionesOds.TryGetValue(idProyecto, out var odsList))
+                                {
+                                    @foreach (var o in odsList)
+                                    {
+                                        <span class="tag-cell">@o</span>
+                                    }
+                                }
+                            </td>
+
+                           
+                            <td>
+                                @if (relacionesKeywords.TryGetValue(idProyecto, out var kws))
+                                {
+                                    @foreach (var k in kws)
+                                    {
+                                        <span class="tag-cell">@k</span>
+                                    }
+                                }
+                            </td>
+
+                            <td>
+                                <div class="acciones">
+                                    <button class="btn-editar" @onclick="() => AbrirModalEditar(proyecto)">✎ Editar</button>
+                                    <button class="btn-eliminar" @onclick="() => AbrirModalEliminar(proyecto)">✕ Eliminar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    @if (mostrarModal)
+    {
+        <div class="modal-overlay">
+            <div class="modal">
+                <h2>@(esEdicion ? "Editar" : "Nuevo") <span>Proyecto</span></h2>
+                <div class="form-grid">
+
+                    <div class="campo campo-full">
+                        <label>ID *</label>
+                        <input type="number" @bind="form_id" placeholder="Ej: 1" disabled="@esEdicion" />
+                    </div>
+
+                    <div class="campo campo-full">
+                        <label>Título *</label>
+                        <input type="text" @bind="form_titulo" placeholder="Título del proyecto" />
+                    </div>
+
+                    <div class="campo campo-full">
+                        <label>Resumen *</label>
+                        <textarea @bind="form_resumen" placeholder="Descripción breve del proyecto"></textarea>
+                    </div>
+
+                    <div class="campo">
+                        <label>Presupuesto *</label>
+                        <input type="number" @bind="form_presupuesto" placeholder="Ej: 50000000" step="0.01" />
+                    </div>
+
+                    <div class="campo">
+                        <label>Tipo Financiación *</label>
+                        <select @bind="form_tipo_financiacion">
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Interno">Interno</option>
+                            <option value="Externo">Externo</option>
+                            <option value="Mixto">Mixto</option>
+                            <option value="Internacional">Internacional</option>
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label>Tipo Fondos *</label>
+                        <select @bind="form_tipo_fondos">
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Publico">Público</option>
+                            <option value="Privado">Privado</option>
+                            <option value="Mixto">Mixto</option>
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label>Fecha Inicio *</label>
+                        <input type="date" @bind="form_fecha_inicio" @bind:format="yyyy-MM-dd" />
+                    </div>
+
+                    <div class="campo">
+                        <label>Fecha Fin (opcional)</label>
+                        <input type="date" @bind="form_fecha_fin" @bind:format="yyyy-MM-dd" />
+                    </div>
+
+                    
+                    <div class="seccion-relaciones">
+                        <div class="seccion-titulo">Clasificación y Relaciones</div>
+                        <div class="form-grid">
+
+                           
+                            <div class="campo">
+                                <label>Área de Conocimiento</label>
+                                <select @bind="form_id_area">
+                                    <option value="">-- Seleccionar --</option>
+                                    @foreach (var ac in listaAreas)
+                                    {
+                                        <option value="@Valor(ac, "id")">@Valor(ac, "disciplina")</option>
+                                    }
+                                </select>
+                            </div>
+
+                           
+                            <div class="campo">
+                                <label>ODS Relacionado</label>
+                                <select @bind="form_id_ods">
+                                    <option value="">-- Seleccionar --</option>
+                                    @foreach (var ods in listaODS)
+                                    {
+                                        <option value="@Valor(ods, "id")">@Valor(ods, "nombre")</option>
+                                    }
+                                </select>
+                            </div>
+
+                           
+                            <div class="campo campo-full">
+                                <label>Palabra Clave</label>
+                                <select @bind="form_termino">
+                                    <option value="">-- Seleccionar --</option>
+                                    @foreach (var tc in listaKeywords)
+                                    {
+                                        <option value="@Valor(tc, "termino")">@Valor(tc, "termino")</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="resumen-dinamico">
+                                <strong>Resumen:</strong> El proyecto se vincula al área de
+                                <u>@GetNombreSeleccionado(listaAreas, form_id_area, "disciplina")</u>,
+                                bajo el ODS <u>@GetNombreSeleccionado(listaODS, form_id_ods, "nombre")</u>
+                                con la clave <u>@(form_termino != "" ? form_termino : "...")</u>.
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="CerrarModal">Cancelar</button>
+                    <button class="btn-guardar" @onclick="Guardar" disabled="@guardando">
+                        @(guardando ? "Guardando..." : (esEdicion ? "Actualizar" : "Crear"))
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (mostrarModalEliminar)
+    {
+        <div class="modal-overlay">
+            <div class="modal modal-confirmar">
+                <h2>Eliminar <span>Proyecto</span></h2>
+                <p>¿Estás seguro de eliminar <strong>@tituloEliminar</strong>? Esta acción no se puede deshacer.</p>
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="() => mostrarModalEliminar = false">Cancelar</button>
+                    <button class="btn-confirmar-eliminar" @onclick="Eliminar" disabled="@guardando">
+                        @(guardando ? "Eliminando..." : "Sí, eliminar")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    // ── Datos principales ────────────────────────────────────────────────────
+    private List<Dictionary<string, object?>> proyectos     = new();
+    private List<Dictionary<string, object?>> listaAreas    = new();
+    private List<Dictionary<string, object?>> listaODS      = new();
+    private List<Dictionary<string, object?>> listaKeywords = new();
+
+    // ── Relaciones cargadas para la tabla (idProyecto → lista de etiquetas) ──
+    // Se construyen después de obtener los datos de las tablas intermedias.
+    private Dictionary<string, List<string>> relacionesArea     = new();
+    private Dictionary<string, List<string>> relacionesOds      = new();
+    private Dictionary<string, List<string>> relacionesKeywords = new();
+
+    // ── Estado de UI ──────────────────────────────────────────────────────────
+    private bool   cargando             = true;
+    private bool   mostrarModal         = false;
+    private bool   mostrarModalEliminar = false;
+    private bool   esEdicion            = false;
+    private bool   guardando            = false;
+    private string mensajeAlerta        = "";
+    private bool   esExito              = true;
+
+    // ── Campos del formulario — proyecto ─────────────────────────────────────
+    private string    form_id                = "";
+    private string    form_titulo            = "";
+    private string    form_resumen           = "";
+    private string    form_presupuesto       = "";
+    private string    form_tipo_financiacion = "";
+    private string    form_tipo_fondos       = "";
+    private DateTime  form_fecha_inicio      = DateTime.Today;
+    private DateTime? form_fecha_fin         = null;
+
+    // ── Campos del formulario — relaciones ────────────────────────────────────
+    private string form_id_area = "";   // id de area_conocimiento → ac_proyecto
+    private string form_id_ods  = "";   // id de objetivo_desarrollo_sostenible → ods_proyecto
+    private string form_termino = "";   // termino de termino_clave → palabras_clave
+
+    // ── Eliminar ──────────────────────────────────────────────────────────────
+    private string idEliminar     = "";
+    private string tituloEliminar = "";
+
+    // ── Filtros ───────────────────────────────────────────────────────────────
+    private string filtroProyectoId = "";  // selección directa por ID de proyecto
+    private string filtroArea       = "";
+    private string filtroTermino    = "";
+    private string filtroOds        = "";
+
+    // Lista derivada que se recalcula cada vez que cambia un filtro o se recargan datos.
+    // La tabla siempre itera sobre esta lista, nunca sobre 'proyectos' directamente.
+    private List<Dictionary<string, object?>> proyectosFiltrados = new();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // INICIALIZACIÓN
+    // ─────────────────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargar catálogos en paralelo para mejorar rendimiento
+        var tareasParalelas = Task.WhenAll(
+            Task.Run(async () => listaAreas    = await Api.ListarAsync("area_conocimiento")),
+            Task.Run(async () => listaODS      = await Api.ListarAsync("objetivo_desarrollo_sostenible")),
+            Task.Run(async () => listaKeywords = await Api.ListarAsync("termino_clave"))
+        );
+
+        await CargarProyectos();
+        await tareasParalelas;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CARGA DE PROYECTOS + RELACIONES
+    // ─────────────────────────────────────────────────────────────────────────
+    private async Task CargarProyectos()
+    {
+        cargando   = true;
+        proyectos  = await Api.ListarAsync("proyecto");
+
+        // Cargar las tres tablas intermedias en paralelo
+        var acProyectoTask    = Api.ListarAsync("ac_proyecto");
+        var odsProyectoTask   = Api.ListarAsync("ods_proyecto");
+        var palabrasClaveTask = Api.ListarAsync("palabras_clave");
+
+        await Task.WhenAll(acProyectoTask, odsProyectoTask, palabrasClaveTask);
+
+        var acProyecto    = acProyectoTask.Result;
+        var odsProyecto   = odsProyectoTask.Result;
+        var palabrasClave = palabrasClaveTask.Result;
+
+        // ── ac_proyecto: proyecto ↔ area_conocimiento ─────────────────────
+        // Construir mapa idProyecto → [nombre de disciplina, ...]
+        relacionesArea = new();
+        foreach (var fila in acProyecto)
+        {
+            var idP  = Valor(fila, "proyecto");
+            var idAc = Valor(fila, "area_conocimiento");
+            var nombreArea = listaAreas
+                .FirstOrDefault(a => Valor(a, "id") == idAc);
+            var etiqueta = nombreArea != null ? Valor(nombreArea, "disciplina") : idAc;
+
+            if (!relacionesArea.ContainsKey(idP)) relacionesArea[idP] = new();
+            if (!string.IsNullOrEmpty(etiqueta)) relacionesArea[idP].Add(etiqueta);
+        }
+
+        // ── ods_proyecto: proyecto ↔ objetivo_desarrollo_sostenible ───────
+        // Construir mapa idProyecto → [nombre de ODS, ...]
+        relacionesOds = new();
+        foreach (var fila in odsProyecto)
+        {
+            var idP   = Valor(fila, "proyecto");
+            var idOds = Valor(fila, "ods");
+            var nombreOds = listaODS
+                .FirstOrDefault(o => Valor(o, "id") == idOds);
+            var etiqueta = nombreOds != null ? Valor(nombreOds, "nombre") : idOds;
+
+            if (!relacionesOds.ContainsKey(idP)) relacionesOds[idP] = new();
+            if (!string.IsNullOrEmpty(etiqueta)) relacionesOds[idP].Add(etiqueta);
+        }
+
+        // ── palabras_clave: proyecto ↔ termino_clave ──────────────────────
+        // Construir mapa idProyecto → [termino, ...]
+        relacionesKeywords = new();
+        foreach (var fila in palabrasClave)
+        {
+            var idP      = Valor(fila, "proyecto");
+    var fkTermino = Valor(fila, "termino_clave");
+
+    // Buscar en el catálogo de termino_clave usando el campo "termino" como PK
+    var encontrado = listaKeywords.FirstOrDefault(k => Valor(k, "termino") == fkTermino);
+    var etiqueta   = encontrado != null ? Valor(encontrado, "termino_ingles") : fkTermino;
+
+    if (!relacionesKeywords.ContainsKey(idP)) relacionesKeywords[idP] = new();
+    if (!string.IsNullOrEmpty(etiqueta)) relacionesKeywords[idP].Add(etiqueta);
+        }
+
+        cargando = false;
+
+        // Recalcular lista filtrada después de cargar (respeta filtros activos)
+        AplicarFiltros();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+    private string Valor(Dictionary<string, object?> fila, string clave)
+        => fila.TryGetValue(clave, out var val) ? val?.ToString() ?? "" : "";
+
+    private void MostrarAlerta(bool exito, string mensaje)
+    {
+        esExito      = exito;
+        mensajeAlerta = mensaje;
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            mensajeAlerta = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private string GetNombreSeleccionado(
+        List<Dictionary<string, object?>> lista,
+        string idBuscado,
+        string campoNombre)
+    {
+        if (string.IsNullOrEmpty(idBuscado)) return "...";
+        var item = lista.FirstOrDefault(x =>
+            Valor(x, "id") == idBuscado || Valor(x, "termino") == idBuscado);
+        return item != null ? Valor(item, campoNombre) : "...";
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // FILTROS
+    // Filtra 'proyectos' según los tres dropdowns y guarda el resultado en
+    // 'proyectosFiltrados'. Se llama al cambiar cualquier select y al recargar.
+    // ─────────────────────────────────────────────────────────────────────────
+    private void AplicarFiltros()
+    {
+        proyectosFiltrados = proyectos.Where(p =>
+        {
+            var id = Valor(p, "id");
+
+            // ── Filtro por proyecto específico (selector directo por ID) ──
+            if (!string.IsNullOrEmpty(filtroProyectoId) && id != filtroProyectoId)
+                return false;
+
+            // ── Filtro por Área de Conocimiento ──────────────────────────
+            // relacionesArea guarda idProyecto → [nombreDisciplina]
+            // Necesitamos comparar por id de área, así que buscamos
+            // cuáles proyectos tienen ese id de área en ac_proyecto.
+            if (!string.IsNullOrEmpty(filtroArea))
+            {
+                // Obtener el nombre de disciplina del área seleccionada
+                var areaSeleccionada = listaAreas.FirstOrDefault(a => Valor(a, "id") == filtroArea);
+                var nombreAreaFiltro = areaSeleccionada != null ? Valor(areaSeleccionada, "disciplina") : "";
+                if (!relacionesArea.TryGetValue(id, out var areasProyecto) ||
+                    !areasProyecto.Contains(nombreAreaFiltro))
+                    return false;
+            }
+
+            // ── Filtro por ODS ────────────────────────────────────────────
+            // relacionesOds guarda idProyecto → [nombreOds]
+            if (!string.IsNullOrEmpty(filtroOds))
+            {
+                var odsSeleccionado = listaODS.FirstOrDefault(o => Valor(o, "id") == filtroOds);
+                var nombreOdsFiltro = odsSeleccionado != null ? Valor(odsSeleccionado, "nombre") : "";
+                if (!relacionesOds.TryGetValue(id, out var odsProyecto) ||
+                    !odsProyecto.Contains(nombreOdsFiltro))
+                    return false;
+            }
+
+            // ── Filtro por Término Clave ──────────────────────────────────
+            // relacionesKeywords guarda idProyecto → [termino_ingles]
+            // El select usa el valor "termino" (PK), así que lo resolvemos
+            // a termino_ingles para comparar con lo almacenado en el mapa.
+            if (!string.IsNullOrEmpty(filtroTermino))
+            {
+                var kwSeleccionado = listaKeywords.FirstOrDefault(k => Valor(k, "termino") == filtroTermino);
+                var termIngles     = kwSeleccionado != null ? Valor(kwSeleccionado, "termino_ingles") : filtroTermino;
+                if (!relacionesKeywords.TryGetValue(id, out var kwsProyecto) ||
+                    !kwsProyecto.Contains(termIngles))
+                    return false;
+            }
+
+            return true;
+        }).ToList();
+    }
+
+    private void LimpiarFiltros()
+    {
+        filtroProyectoId = "";
+        filtroArea       = "";
+        filtroOds        = "";
+        filtroTermino    = "";
+        AplicarFiltros();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ABRIR / CERRAR MODALES
+    // ─────────────────────────────────────────────────────────────────────────
+    private void AbrirModalNuevo()
+    {
+        esEdicion              = false;
+        form_id                = "";
+        form_titulo            = "";
+        form_resumen           = "";
+        form_presupuesto       = "";
+        form_tipo_financiacion = "";
+        form_tipo_fondos       = "";
+        form_fecha_inicio      = DateTime.Today;
+        form_fecha_fin         = null;
+        form_id_area           = "";
+        form_id_ods            = "";
+        form_termino           = "";
+        mostrarModal           = true;
+    }
+
+    private void AbrirModalEditar(Dictionary<string, object?> proyecto)
+    {
+        esEdicion              = true;
+        form_id                = Valor(proyecto, "id");
+        form_titulo            = Valor(proyecto, "titulo");
+        form_resumen           = Valor(proyecto, "resumen");
+        form_presupuesto       = Valor(proyecto, "presupuesto");
+        form_tipo_financiacion = Valor(proyecto, "tipo_financiacion");
+        form_tipo_fondos       = Valor(proyecto, "tipo_fondos");
+        form_fecha_inicio      = DateTime.TryParse(Valor(proyecto, "fecha_inicio"), out var fi) ? fi : DateTime.Today;
+        form_fecha_fin         = DateTime.TryParse(Valor(proyecto, "fecha_fin"),    out var ff) ? ff : null;
+
+        // Pre-cargar relaciones existentes para este proyecto (primera relación de cada tipo)
+        form_id_area = relacionesArea.TryGetValue(form_id, out var areas) && areas.Count > 0
+            ? listaAreas.FirstOrDefault(a => Valor(a, "disciplina") == areas[0]) is { } foundArea
+                ? Valor(foundArea, "id") : ""
+            : "";
+
+        form_id_ods = relacionesOds.TryGetValue(form_id, out var odsList) && odsList.Count > 0
+            ? listaODS.FirstOrDefault(o => Valor(o, "nombre") == odsList[0]) is { } foundOds
+                ? Valor(foundOds, "id") : ""
+            : "";
+
+        form_termino = relacionesKeywords.TryGetValue(form_id, out var kws) && kws.Count > 0
+            ? kws[0] : "";
+
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEliminar(Dictionary<string, object?> proyecto)
+    {
+        idEliminar           = Valor(proyecto, "id");
+        tituloEliminar       = Valor(proyecto, "titulo");
+        mostrarModalEliminar = true;
+    }
+
+    private void CerrarModal() => mostrarModal = false;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GUARDAR (CREAR / ACTUALIZAR)
+    // Flujo:
+    //   1. Guardar/actualizar registro en tabla 'proyecto'
+    //   2. Si hay área seleccionada → insertar/reemplazar en 'ac_proyecto'
+    //   3. Si hay ODS seleccionado  → insertar/reemplazar en 'ods_proyecto'
+    //   4. Si hay término seleccionado → insertar/reemplazar en 'palabras_clave'
+    // ─────────────────────────────────────────────────────────────────────────
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(form_id)                ||
+            string.IsNullOrWhiteSpace(form_titulo)            ||
+            string.IsNullOrWhiteSpace(form_resumen)           ||
+            string.IsNullOrWhiteSpace(form_presupuesto)       ||
+            string.IsNullOrWhiteSpace(form_tipo_financiacion) ||
+            string.IsNullOrWhiteSpace(form_tipo_fondos))
+        {
+            MostrarAlerta(false, "Todos los campos obligatorios deben estar completos.");
+            return;
+        }
+
+        guardando = true;
+
+        // ── 1. Datos del proyecto (sin relaciones) ────────────────────────
+        var datosProyecto = new Dictionary<string, object?>
+        {
+            ["id"]                = int.Parse(form_id),
+            ["titulo"]            = form_titulo,
+            ["resumen"]           = form_resumen,
+            ["presupuesto"]       = double.Parse(form_presupuesto),
+            ["tipo_financiacion"] = form_tipo_financiacion,
+            ["tipo_fondos"]       = form_tipo_fondos,
+            ["fecha_inicio"]      = form_fecha_inicio.ToString("yyyy-MM-dd"),
+            ["fecha_fin"]         = form_fecha_fin.HasValue
+                                        ? form_fecha_fin.Value.ToString("yyyy-MM-dd")
+                                        : null,
+        };
+
+        (bool exito, string mensaje) resultadoProyecto;
+        if (esEdicion)
+            resultadoProyecto = await Api.ActualizarAsync("proyecto", "id", form_id, datosProyecto);
+        else
+            resultadoProyecto = await Api.CrearAsync("proyecto", datosProyecto);
+
+        if (!resultadoProyecto.exito)
+        {
+            guardando = false;
+            mostrarModal = false;
+            MostrarAlerta(false, resultadoProyecto.mensaje);
+            return;
+        }
+
+        // ── 2. Relación ac_proyecto (proyecto ↔ area_conocimiento) ────────
+        // Si estamos editando, eliminamos la relación anterior y creamos la nueva.
+        // Si no se seleccionó área, no tocamos la tabla intermedia.
+        if (!string.IsNullOrEmpty(form_id_area))
+        {
+            if (esEdicion)
+            {
+                // Eliminar relación anterior de este proyecto con cualquier área
+                await Api.EliminarAsync("ac_proyecto", "proyecto", form_id);
+            }
+
+            var datosAc = new Dictionary<string, object?>
+            {
+                ["proyecto"]          = int.Parse(form_id),
+                ["area_conocimiento"] = int.Parse(form_id_area),
+            };
+            await Api.CrearAsync("ac_proyecto", datosAc);
+        }
+
+        // ── 3. Relación ods_proyecto (proyecto ↔ objetivo_desarrollo_sostenible) ──
+        if (!string.IsNullOrEmpty(form_id_ods))
+        {
+            if (esEdicion)
+            {
+                await Api.EliminarAsync("ods_proyecto", "proyecto", form_id);
+            }
+
+            var datosOds = new Dictionary<string, object?>
+            {
+                ["proyecto"] = int.Parse(form_id),
+                ["ods"]      = int.Parse(form_id_ods),
+            };
+            await Api.CrearAsync("ods_proyecto", datosOds);
+        }
+
+        // ── 4. Relación palabras_clave (proyecto ↔ termino_clave) ─────────
+        if (!string.IsNullOrEmpty(form_termino))
+        {
+            if (esEdicion)
+            {
+                await Api.EliminarAsync("palabras_clave", "proyecto", form_id);
+            }
+
+            var datosKw = new Dictionary<string, object?>
+            {
+                ["proyecto"]      = int.Parse(form_id),
+                ["termino_clave"] = form_termino,
+            };
+            await Api.CrearAsync("palabras_clave", datosKw);
+        }
+
+        guardando    = false;
+        mostrarModal = false;
+        MostrarAlerta(true, esEdicion ? "Proyecto actualizado correctamente." : "Proyecto creado correctamente.");
+        await CargarProyectos();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ELIMINAR
+    // Flujo: eliminar relaciones intermedias primero, luego el proyecto.
+    // (Si tu BD tiene ON DELETE CASCADE puedes omitir los pasos intermedios.)
+    // ─────────────────────────────────────────────────────────────────────────
+    private async Task Eliminar()
+    {
+        guardando = true;
+
+        // Eliminar registros en tablas intermedias antes del proyecto
+        // (evita violaciones de FK si no hay CASCADE configurado)
+        await Api.EliminarAsync("ac_proyecto",    "proyecto", idEliminar);
+        await Api.EliminarAsync("ods_proyecto",   "proyecto", idEliminar);
+        await Api.EliminarAsync("palabras_clave", "proyecto", idEliminar);
+
+        var resultado = await Api.EliminarAsync("proyecto", "id", idEliminar);
+
+        guardando            = false;
+        mostrarModalEliminar = false;
+        MostrarAlerta(resultado.exito, resultado.mensaje);
+
+        if (resultado.exito)
+            await CargarProyectos();
+    }
+}
