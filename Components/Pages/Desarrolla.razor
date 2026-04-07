@@ -1,32 +1,32 @@
-@page "/producto"
+@page "/desarrolla"
 @rendermode InteractiveServer
 @inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
 
-<PageTitle>Gestión de Productos</PageTitle>
+<PageTitle>Gestión de Desarrolla</PageTitle>
 
 <style>
     @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
     :root {
-        --naranja: #F97316;
-        --naranja-oscuro: #EA580C;
-        --fondo: #FFF8F4;
+        --teal: #0D9488;
+        --teal-oscuro: #0F766E;
+        --fondo: #F0FDFA;
         --blanco: #ffffff;
-        --texto: #2d1a0e;
-        --texto-suave: #a37060;
-        --borde: #e6d4c8;
+        --texto: #0f2e2b;
+        --texto-suave: #5f9ea0;
+        --borde: #ccebe8;
         --rojo: #e05252;
     }
 
-    .producto-wrapper { font-family: 'DM Sans', sans-serif; background-color: var(--fondo); min-height: 100vh; padding: 2rem; color: var(--texto); }
+    .desarrolla-wrapper { font-family: 'DM Sans', sans-serif; background-color: var(--fondo); min-height: 100vh; padding: 2rem; color: var(--texto); }
 
-    .producto-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--borde); }
-    .producto-header h1 { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--texto); margin: 0; line-height: 1; }
-    .producto-header h1 span { color: var(--naranja); }
-    .producto-header p { margin: 0.3rem 0 0; font-size: 0.9rem; color: var(--texto-suave); font-weight: 300; }
+    .desarrolla-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--borde); }
+    .desarrolla-header h1 { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--texto); margin: 0; line-height: 1; }
+    .desarrolla-header h1 span { color: var(--teal); }
+    .desarrolla-header p { margin: 0.3rem 0 0; font-size: 0.9rem; color: var(--texto-suave); font-weight: 300; }
 
-    .btn-nuevo { background-color: var(--naranja); color: white; border: none; padding: 0.65rem 1.4rem; border-radius: 10px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.1s; }
-    .btn-nuevo:hover { background-color: var(--naranja-oscuro); transform: translateY(-1px); }
+    .btn-nuevo { background-color: var(--teal); color: white; border: none; padding: 0.65rem 1.4rem; border-radius: 10px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+    .btn-nuevo:hover { background-color: var(--teal-oscuro); transform: translateY(-1px); }
 
     .alerta { padding: 0.9rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.9rem; font-weight: 500; }
     .alerta.exito { background: #e6f9ee; color: #15803d; border: 1px solid #bbf7d0; }
@@ -38,11 +38,10 @@
     thead th { padding: 1rem 1.2rem; text-align: left; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
     tbody tr { border-bottom: 1px solid var(--borde); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background-color: #fff3ed; }
+    tbody tr:hover { background-color: #e6faf8; }
     tbody td { padding: 0.9rem 1.2rem; color: var(--texto); vertical-align: middle; }
 
-    .id-badge { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; background: #ffedd5; color: var(--naranja-oscuro); padding: 0.2rem 0.6rem; border-radius: 6px; display: inline-block; }
-    .categoria-badge { background: #fff7ed; color: var(--naranja-oscuro); border: 1px solid #fed7aa; padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+    .rol-badge { background: #ccfbf1; color: var(--teal-oscuro); border: 1px solid #99f6e4; padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
 
     .acciones { display: flex; gap: 0.5rem; }
     .btn-editar { background: #fff8e1; color: #b8860b; border: 1px solid #f5c842; padding: 0.35rem 0.8rem; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
@@ -59,20 +58,21 @@
     @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
     .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin: 0 0 1.5rem; color: var(--texto); }
-    .modal h2 span { color: var(--naranja); }
+    .modal h2 span { color: var(--teal); }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
     .campo-full { grid-column: 1 / -1; }
 
     .campo { margin-bottom: 1.1rem !important; display: block !important; }
     .campo label { display: block !important; font-size: 0.8rem !important; font-weight: 500 !important; color: var(--texto-suave) !important; margin-bottom: 0.4rem !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; }
-    .campo input, .campo select { width: 100% !important; padding: 0.65rem 0.9rem !important; border: 1.5px solid var(--borde) !important; border-radius: 9px !important; font-family: 'DM Sans', sans-serif !important; font-size: 0.9rem !important; color: var(--texto) !important; background: var(--fondo) !important; box-sizing: border-box !important; display: block !important; visibility: visible !important; opacity: 1 !important; height: auto !important; min-height: 40px !important; }
-    .campo input:focus, .campo select:focus { outline: none !important; border-color: var(--naranja) !important; background: white !important; }
-    .campo input:disabled { opacity: 0.6 !important; cursor: not-allowed !important; }
+    .campo input, .campo select, .campo textarea { width: 100% !important; padding: 0.65rem 0.9rem !important; border: 1.5px solid var(--borde) !important; border-radius: 9px !important; font-family: 'DM Sans', sans-serif !important; font-size: 0.9rem !important; color: var(--texto) !important; background: var(--fondo) !important; box-sizing: border-box !important; display: block !important; visibility: visible !important; opacity: 1 !important; height: auto !important; min-height: 40px !important; }
+    .campo textarea { resize: vertical; min-height: 80px; }
+    .campo input:focus, .campo select:focus, .campo textarea:focus { outline: none !important; border-color: var(--teal) !important; background: white !important; }
+    .campo input:disabled, .campo select:disabled { opacity: 0.6 !important; cursor: not-allowed !important; }
 
     .modal-acciones { display: flex; gap: 0.8rem; margin-top: 1.5rem; justify-content: flex-end; }
-    .btn-guardar { background: var(--naranja); color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 9px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
-    .btn-guardar:hover { background: var(--naranja-oscuro); }
+    .btn-guardar { background: var(--teal); color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 9px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+    .btn-guardar:hover { background: var(--teal-oscuro); }
     .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-cancelar { background: transparent; color: var(--texto-suave); border: 1.5px solid var(--borde); padding: 0.65rem 1.2rem; border-radius: 9px; font-size: 0.9rem; cursor: pointer; }
     .btn-cancelar:hover { border-color: var(--texto-suave); }
@@ -83,14 +83,14 @@
     .btn-confirmar-eliminar:hover { background: #c94040; }
 </style>
 
-<div class="producto-wrapper">
+<div class="desarrolla-wrapper">
 
-    <div class="producto-header">
+    <div class="desarrolla-header">
         <div>
-            <h1>Gestión de <span>Productos</span></h1>
-            <p>Productos resultantes de los proyectos de investigación</p>
+            <h1>Participación en <span>Proyectos</span></h1>
+            <p>Docentes que desarrollan proyectos de investigación y su rol</p>
         </div>
-        <button class="btn-nuevo" @onclick="AbrirModalNuevo">＋ Nuevo Producto</button>
+        <button class="btn-nuevo" @onclick="AbrirModalNuevo">＋ Nueva Participación</button>
     </div>
 
     @if (!string.IsNullOrEmpty(mensajeAlerta))
@@ -103,40 +103,36 @@
     <div class="tabla-card">
         @if (cargando)
         {
-            <div class="cargando">Cargando productos...</div>
+            <div class="cargando">Cargando participaciones...</div>
         }
-        else if (productos.Count == 0)
+        else if (registros.Count == 0)
         {
-            <div class="sin-datos">No hay productos registrados aún.</div>
+            <div class="sin-datos">No hay participaciones registradas aún.</div>
         }
         else
         {
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Categoría</th>
-                        <th>Fecha Entrega</th>
+                        <th>Docente</th>
                         <th>Proyecto</th>
-                        <th>Tipo Producto</th>
+                        <th>Rol</th>
+                        <th>Descripción</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var producto in productos)
+                    @foreach (var reg in registros)
                     {
                         <tr>
-                            <td><span class="id-badge">@Valor(producto, "id")</span></td>
-                            <td>@Valor(producto, "nombre")</td>
-                            <td><span class="categoria-badge">@Valor(producto, "categoria")</span></td>
-                            <td>@Valor(producto, "fecha_entrega")</td>
-                            <td>@ObtenerNombreProyecto(Valor(producto, "proyecto"))</td>
-                            <td>@ObtenerNombreTipoProducto(Valor(producto, "tipo_producto"))</td>
+                            <td>@ObtenerNombreDocente(Valor(reg, "docente"))</td>
+                            <td>@ObtenerNombreProyecto(Valor(reg, "proyecto"))</td>
+                            <td><span class="rol-badge">@Valor(reg, "rol")</span></td>
+                            <td>@Valor(reg, "descripcion")</td>
                             <td>
                                 <div class="acciones">
-                                    <button class="btn-editar" @onclick="() => AbrirModalEditar(producto)">✎ Editar</button>
-                                    <button class="btn-eliminar" @onclick="() => AbrirModalEliminar(producto)">✕ Eliminar</button>
+                                    <button class="btn-editar" @onclick="() => AbrirModalEditar(reg)">✎ Editar</button>
+                                    <button class="btn-eliminar" @onclick="() => AbrirModalEliminar(reg)">✕ Eliminar</button>
                                 </div>
                             </td>
                         </tr>
@@ -150,32 +146,23 @@
     {
         <div class="modal-overlay">
             <div class="modal">
-                <h2>@(esEdicion ? "Editar" : "Nuevo") <span>Producto</span></h2>
+                <h2>@(esEdicion ? "Editar" : "Nueva") <span>Participación</span></h2>
                 <div class="form-grid">
 
                     <div class="campo campo-full">
-                        <label>ID *</label>
-                        <input type="number" @bind="form_id" placeholder="Ej: 1" disabled="@esEdicion" />
-                    </div>
-
-                    <div class="campo campo-full">
-                        <label>Nombre *</label>
-                        <input type="text" @bind="form_nombre" placeholder="Nombre del producto" />
-                    </div>
-
-                    <div class="campo">
-                        <label>Categoría *</label>
-                        <input type="text" @bind="form_categoria" placeholder="Ej: Artículo" />
-                    </div>
-
-                    <div class="campo">
-                        <label>Fecha Entrega *</label>
-                        <input type="date" @bind="form_fecha_entrega" @bind:format="yyyy-MM-dd" />
+                        <label>Docente *</label>
+                        <select @bind="form_docente" disabled="@esEdicion">
+                            <option value="">-- Seleccionar docente --</option>
+                            @foreach (var d in listaDocentes)
+                            {
+                                <option value="@Valor(d, "cedula")">@Valor(d, "nombres") @Valor(d, "apellidos")</option>
+                            }
+                        </select>
                     </div>
 
                     <div class="campo campo-full">
                         <label>Proyecto *</label>
-                        <select @bind="form_proyecto">
+                        <select @bind="form_proyecto" disabled="@esEdicion">
                             <option value="">-- Seleccionar proyecto --</option>
                             @foreach (var p in listaProyectos)
                             {
@@ -185,14 +172,19 @@
                     </div>
 
                     <div class="campo campo-full">
-                        <label>Tipo de Producto *</label>
-                        <select @bind="form_tipo_producto">
-                            <option value="">-- Seleccionar tipo --</option>
-                            @foreach (var t in listaTiposProducto)
-                            {
-                                <option value="@Valor(t, "id")">@Valor(t, "nombre") (@Valor(t, "categoria"))</option>
-                            }
+                        <label>Rol *</label>
+                        <select @bind="form_rol">
+                            <option value="">-- Seleccionar rol --</option>
+                            <option value="Investigador Principal">Investigador Principal</option>
+                            <option value="Co-investigador">Co-investigador</option>
+                            <option value="Auxiliar">Auxiliar</option>
+                            <option value="Asesor">Asesor</option>
                         </select>
+                    </div>
+
+                    <div class="campo campo-full">
+                        <label>Descripción *</label>
+                        <textarea @bind="form_descripcion" placeholder="Descripción del rol en el proyecto"></textarea>
                     </div>
 
                 </div>
@@ -210,8 +202,8 @@
     {
         <div class="modal-overlay">
             <div class="modal modal-confirmar">
-                <h2>Eliminar <span>Producto</span></h2>
-                <p>¿Estás seguro de eliminar <strong>@nombreEliminar</strong>? Esta acción no se puede deshacer.</p>
+                <h2>Eliminar <span>Participación</span></h2>
+                <p>¿Estás seguro de eliminar la participación de <strong>@nombreEliminar</strong>?</p>
                 <div class="modal-acciones">
                     <button class="btn-cancelar" @onclick="() => mostrarModalEliminar = false">Cancelar</button>
                     <button class="btn-confirmar-eliminar" @onclick="Eliminar" disabled="@guardando">
@@ -226,9 +218,9 @@
 
 @code {
     // ─── ESTADO ───────────────────────────────────────
-    private List<Dictionary<string, object?>> productos = new();
+    private List<Dictionary<string, object?>> registros = new();
+    private List<Dictionary<string, object?>> listaDocentes = new();
     private List<Dictionary<string, object?>> listaProyectos = new();
-    private List<Dictionary<string, object?>> listaTiposProducto = new();
     private bool cargando = true;
     private bool mostrarModal = false;
     private bool mostrarModalEliminar = false;
@@ -238,57 +230,52 @@
     private bool esExito = true;
 
     // ─── CAMPOS DEL FORMULARIO ─────────────────────────
-    private string form_id = "";
-    private string form_nombre = "";
-    private string form_categoria = "";
-    private DateTime form_fecha_entrega = DateTime.Today;
+    private string form_docente = "";
     private string form_proyecto = "";
-    private string form_tipo_producto = "";
+    private string form_rol = "";
+    private string form_descripcion = "";
 
     // ─── PARA ELIMINAR ─────────────────────────────────
-    private string idEliminar = "";
+    private string docenteEliminar = "";
+    private string proyectoEliminar = "";
     private string nombreEliminar = "";
 
     // ─── CICLO DE VIDA ─────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        // Carga en paralelo los productos y las listas de FK
         await Task.WhenAll(
-            CargarProductos(),
+            CargarRegistros(),
             CargarListasFK()
         );
     }
 
-    private async Task CargarProductos()
+    private async Task CargarRegistros()
     {
         cargando = true;
-        productos = await Api.ListarAsync("producto");
+        registros = await Api.ListarAsync("desarrolla");
         cargando = false;
     }
 
-    // Carga las listas para los selects de FK
     private async Task CargarListasFK()
     {
-        listaProyectos     = await Api.ListarAsync("proyecto");
-        listaTiposProducto = await Api.ListarAsync("tipo_producto");
+        listaDocentes  = await Api.ListarAsync("docente");
+        listaProyectos = await Api.ListarAsync("proyecto");
     }
 
     // ─── HELPERS ───────────────────────────────────────
     private string Valor(Dictionary<string, object?> fila, string clave)
         => fila.TryGetValue(clave, out var val) ? val?.ToString() ?? "" : "";
 
-    // Muestra el título del proyecto en la tabla en vez del ID
+    private string ObtenerNombreDocente(string cedula)
+    {
+        var d = listaDocentes.FirstOrDefault(x => Valor(x, "cedula") == cedula);
+        return d != null ? $"{Valor(d, "nombres")} {Valor(d, "apellidos")}" : cedula;
+    }
+
     private string ObtenerNombreProyecto(string id)
     {
         var p = listaProyectos.FirstOrDefault(x => Valor(x, "id") == id);
         return p != null ? Valor(p, "titulo") : id;
-    }
-
-    // Muestra el nombre del tipo de producto en la tabla en vez del ID
-    private string ObtenerNombreTipoProducto(string id)
-    {
-        var t = listaTiposProducto.FirstOrDefault(x => Valor(x, "id") == id);
-        return t != null ? Valor(t, "nombre") : id;
     }
 
     private void MostrarAlerta(bool exito, string mensaje)
@@ -302,37 +289,32 @@
         });
     }
 
-    // ─── MODAL NUEVO ───────────────────────────────────
+    // ─── MODALES ───────────────────────────────────────
     private void AbrirModalNuevo()
     {
         esEdicion = false;
-        form_id = "";
-        form_nombre = "";
-        form_categoria = "";
-        form_fecha_entrega = DateTime.Today;
+        form_docente = "";
         form_proyecto = "";
-        form_tipo_producto = "";
+        form_rol = "";
+        form_descripcion = "";
         mostrarModal = true;
     }
 
-    // ─── MODAL EDITAR ──────────────────────────────────
-    private void AbrirModalEditar(Dictionary<string, object?> producto)
+    private void AbrirModalEditar(Dictionary<string, object?> reg)
     {
         esEdicion = true;
-        form_id            = Valor(producto, "id");
-        form_nombre        = Valor(producto, "nombre");
-        form_categoria     = Valor(producto, "categoria");
-        form_fecha_entrega = DateTime.TryParse(Valor(producto, "fecha_entrega"), out var fd) ? fd : DateTime.Today;
-        form_proyecto      = Valor(producto, "proyecto");
-        form_tipo_producto = Valor(producto, "tipo_producto");
+        form_docente     = Valor(reg, "docente");
+        form_proyecto    = Valor(reg, "proyecto");
+        form_rol         = Valor(reg, "rol");
+        form_descripcion = Valor(reg, "descripcion");
         mostrarModal = true;
     }
 
-    // ─── MODAL ELIMINAR ────────────────────────────────
-    private void AbrirModalEliminar(Dictionary<string, object?> producto)
+    private void AbrirModalEliminar(Dictionary<string, object?> reg)
     {
-        idEliminar     = Valor(producto, "id");
-        nombreEliminar = Valor(producto, "nombre");
+        docenteEliminar  = Valor(reg, "docente");
+        proyectoEliminar = Valor(reg, "proyecto");
+        nombreEliminar   = ObtenerNombreDocente(docenteEliminar);
         mostrarModalEliminar = true;
     }
 
@@ -341,13 +323,12 @@
     // ─── GUARDAR ───────────────────────────────────────
     private async Task Guardar()
     {
-        if (string.IsNullOrWhiteSpace(form_id) ||
-            string.IsNullOrWhiteSpace(form_nombre) ||
-            string.IsNullOrWhiteSpace(form_categoria) ||
+        if (string.IsNullOrWhiteSpace(form_docente) ||
             string.IsNullOrWhiteSpace(form_proyecto) ||
-            string.IsNullOrWhiteSpace(form_tipo_producto))
+            string.IsNullOrWhiteSpace(form_rol) ||
+            string.IsNullOrWhiteSpace(form_descripcion))
         {
-            MostrarAlerta(false, "Todos los campos obligatorios deben estar completos.");
+            MostrarAlerta(false, "Todos los campos son obligatorios.");
             return;
         }
 
@@ -355,41 +336,44 @@
 
         var datos = new Dictionary<string, object?>
         {
-            ["id"]            = int.Parse(form_id),
-            ["nombre"]        = form_nombre,
-            ["categoria"]     = form_categoria,
-            ["fecha_entrega"] = form_fecha_entrega.ToString("yyyy-MM-dd"),
-            ["proyecto"]      = int.Parse(form_proyecto),
-            ["tipo_producto"] = int.Parse(form_tipo_producto)
+            ["docente"]      = int.Parse(form_docente),
+            ["proyecto"]     = int.Parse(form_proyecto),
+            ["rol"]          = form_rol,
+            ["descripcion"]  = form_descripcion
         };
 
         (bool exito, string mensaje) resultado;
 
         if (esEdicion)
-            resultado = await Api.ActualizarAsync("producto", "id", form_id, datos);
+        {
+            // La clave compuesta para actualizar es docente
+            resultado = await Api.ActualizarAsync("desarrolla", "docente", form_docente, datos);
+        }
         else
-            resultado = await Api.CrearAsync("producto", datos);
+        {
+            resultado = await Api.CrearAsync("desarrolla", datos);
+        }
 
         guardando = false;
         mostrarModal = false;
         MostrarAlerta(resultado.exito, resultado.mensaje);
 
         if (resultado.exito)
-            await CargarProductos();
+            await CargarRegistros();
     }
 
     // ─── ELIMINAR ──────────────────────────────────────
+    // Esta tabla tiene clave primaria compuesta (docente + proyecto)
+    // Eliminamos filtrando por docente primero
     private async Task Eliminar()
     {
         guardando = true;
-        var resultado = await Api.EliminarAsync("producto", "id", idEliminar);
+        var resultado = await Api.EliminarAsync("desarrolla", "docente", docenteEliminar);
         guardando = false;
         mostrarModalEliminar = false;
         MostrarAlerta(resultado.exito, resultado.mensaje);
 
         if (resultado.exito)
-            await CargarProductos();
+            await CargarRegistros();
     }
 }
-
- 

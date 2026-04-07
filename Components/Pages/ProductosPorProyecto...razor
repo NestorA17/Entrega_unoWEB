@@ -1,0 +1,176 @@
+@page "/productosporproyecto"
+@rendermode InteractiveServer
+@inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
+
+<PageTitle>Productos por Proyecto</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+        --coral: #EF4444;
+        --coral-oscuro: #DC2626;
+        --fondo: #FFF5F5;
+        --blanco: #ffffff;
+        --texto: #2d1010;
+        --texto-suave: #9f6060;
+        --borde: #fde0e0;
+    }
+
+    .pp-wrapper { font-family: 'DM Sans', sans-serif; background-color: var(--fondo); min-height: 100vh; padding: 2rem; color: var(--texto); }
+
+    .pp-header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--borde); }
+    .pp-header h1 { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--texto); margin: 0; line-height: 1; }
+    .pp-header h1 span { color: var(--coral); }
+    .pp-header p { margin: 0.3rem 0 0; font-size: 0.9rem; color: var(--texto-suave); font-weight: 300; }
+
+    .sp-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #fef2f2; border: 1px solid #fecaca; color: var(--coral-oscuro); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.78rem; font-weight: 600; margin-top: 0.5rem; }
+
+    .filtro-card { background: var(--blanco); border-radius: 16px; border: 1px solid var(--borde); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.04); display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+
+    .campo { display: block; flex: 1; min-width: 250px; }
+    .campo label { display: block !important; font-size: 0.8rem !important; font-weight: 500 !important; color: var(--texto-suave) !important; margin-bottom: 0.4rem !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; }
+    .campo select { width: 100% !important; padding: 0.65rem 0.9rem !important; border: 1.5px solid var(--borde) !important; border-radius: 9px !important; font-family: 'DM Sans', sans-serif !important; font-size: 0.9rem !important; color: var(--texto) !important; background: var(--fondo) !important; box-sizing: border-box !important; display: block !important; visibility: visible !important; opacity: 1 !important; height: auto !important; min-height: 40px !important; }
+    .campo select:focus { outline: none !important; border-color: var(--coral) !important; background: white !important; }
+
+    .btn-buscar { background: var(--coral); color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 10px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; height: 42px; }
+    .btn-buscar:hover { background: var(--coral-oscuro); }
+    .btn-buscar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .info-sp { background: #fef9ee; border: 1px solid #fde68a; border-radius: 10px; padding: 0.8rem 1.2rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: #92400e; }
+    .info-sp strong { color: #78350f; }
+
+    .tabla-card { background: var(--blanco); border-radius: 16px; border: 1px solid var(--borde); overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead { background-color: var(--texto); color: white; }
+    thead th { padding: 1rem 1.2rem; text-align: left; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    tbody tr { border-bottom: 1px solid var(--borde); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background-color: #fff5f5; }
+    tbody td { padding: 0.9rem 1.2rem; color: var(--texto); vertical-align: middle; }
+
+    .id-badge { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; background: #fee2e2; color: var(--coral-oscuro); padding: 0.2rem 0.6rem; border-radius: 6px; display: inline-block; }
+    .tipo-badge { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+    .tipologia-badge { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+
+    .sin-datos { text-align: center; padding: 3rem; color: var(--texto-suave); font-size: 0.95rem; }
+    .cargando { text-align: center; padding: 3rem; color: var(--texto-suave); }
+    .total-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #dcfce7; border: 1px solid #bbf7d0; color: #15803d; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600; margin-bottom: 1rem; }
+</style>
+
+<div class="pp-wrapper">
+
+    <div class="pp-header">
+        <h1>Productos por <span>Proyecto</span></h1>
+        <p>Consulta multitabla usando procedimiento almacenado</p>
+        <div class="sp-badge">⚙ sp_ProductosPorProyecto</div>
+    </div>
+
+    <div class="info-sp">
+        <strong>Procedimiento almacenado:</strong> Esta consulta usa
+        <strong>sp_ProductosPorProyecto</strong> que combina las tablas
+        <strong>producto</strong>, <strong>proyecto</strong> y <strong>tipo_producto</strong>
+        mediante JOINs para mostrar información completa de cada producto.
+    </div>
+
+    <div class="filtro-card">
+        <div class="campo">
+            <label>Seleccionar Proyecto</label>
+            <select @bind="proyectoSeleccionado">
+                <option value="">-- Seleccionar proyecto --</option>
+                @foreach (var p in listaProyectos)
+                {
+                    <option value="@Valor(p, "id")">@Valor(p, "titulo")</option>
+                }
+            </select>
+        </div>
+        <button class="btn-buscar" @onclick="BuscarProductos" disabled="@buscando">
+            @(buscando ? "Buscando..." : "🔍 Buscar")
+        </button>
+    </div>
+
+    @if (busquedaRealizada)
+    {
+        @if (buscando)
+        {
+            <div class="tabla-card">
+                <div class="cargando">Ejecutando procedimiento almacenado...</div>
+            </div>
+        }
+        else if (resultados.Count == 0)
+        {
+            <div class="tabla-card">
+                <div class="sin-datos">No se encontraron productos para este proyecto.</div>
+            </div>
+        }
+        else
+        {
+            <div class="total-badge">✓ @resultados.Count producto(s) encontrado(s)</div>
+            <div class="tabla-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Fecha Entrega</th>
+                            <th>Proyecto</th>
+                            <th>Tipo Producto</th>
+                            <th>Tipología</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in resultados)
+                        {
+                            <tr>
+                                <td><span class="id-badge">@Valor(r, "id")</span></td>
+                                <td>@Valor(r, "nombre")</td>
+                                <td>@Valor(r, "categoria")</td>
+                                <td>@Valor(r, "fecha_entrega")</td>
+                                <td>@Valor(r, "nombre_proyecto")</td>
+                                <td><span class="tipo-badge">@Valor(r, "tipo_producto")</span></td>
+                                <td><span class="tipologia-badge">@Valor(r, "tipologia")</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    private List<Dictionary<string, object?>> listaProyectos = new();
+    private List<Dictionary<string, object?>> resultados = new();
+    private string proyectoSeleccionado = "";
+    private bool buscando = false;
+    private bool busquedaRealizada = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaProyectos = await Api.ListarAsync("proyecto");
+    }
+
+    private string Valor(Dictionary<string, object?> fila, string clave)
+        => fila.TryGetValue(clave, out var val) ? val?.ToString() ?? "" : "";
+
+    private async Task BuscarProductos()
+    {
+        if (string.IsNullOrWhiteSpace(proyectoSeleccionado))
+            return;
+
+        buscando = true;
+        busquedaRealizada = true;
+        resultados = new();
+
+        var parametros = new Dictionary<string, object?>
+        {
+            ["proyecto_id"] = int.Parse(proyectoSeleccionado)
+        };
+
+        resultados = await Api.EjecutarSPAsync("sp_ProductosPorProyecto", parametros);
+
+        buscando = false;
+    }
+}

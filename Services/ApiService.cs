@@ -3,21 +3,15 @@ using System.Text.Json;
 
 namespace FrontBlazor_AppiGenericaCsharp.Services
 {
-    // Servicio generico que consume la API REST para cualquier tabla.
-    // Se inyecta en las paginas Blazor con @inject ApiService Api
     public class ApiService
     {
-        // HttpClient configurado en Program.cs con la URL base de la API
         private readonly HttpClient _http;
 
-        // Opciones para deserializar JSON sin distinguir mayusculas/minusculas
-        // La API devuelve "datos", "estado", etc. en minuscula
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
         };
 
-        // El constructor recibe el HttpClient inyectado por DI
         public ApiService(HttpClient http)
         {
             _http = http;
@@ -25,50 +19,44 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
 
         // ──────────────────────────────────────────────
         // LISTAR: GET /api/{tabla}
-        // Devuelve la lista de registros como diccionarios
         // ──────────────────────────────────────────────
-       public async Task<List<Dictionary<string, object?>>> ListarAsync(string tabla, int? limite = null)
-{
-    try
-    {
-        string url = $"/api/{tabla}";
-        if (limite.HasValue)
-            url += $"?limite={limite.Value}";
+        public async Task<List<Dictionary<string, object?>>> ListarAsync(string tabla, int? limite = null)
+        {
+            try
+            {
+                string url = $"/api/{tabla}";
+                if (limite.HasValue)
+                    url += $"?limite={limite.Value}";
 
-        var respuesta = await _http.GetAsync(url);
+                var respuesta = await _http.GetAsync(url);
 
-        // Si la respuesta es 204 (sin contenido) retorna lista vacía
-        if (respuesta.StatusCode == System.Net.HttpStatusCode.NoContent)
-            return new List<Dictionary<string, object?>>();
+                if (respuesta.StatusCode == System.Net.HttpStatusCode.NoContent)
+                    return new List<Dictionary<string, object?>>();
 
-        // Si no fue exitosa, retorna lista vacía
-        if (!respuesta.IsSuccessStatusCode)
-            return new List<Dictionary<string, object?>>();
+                if (!respuesta.IsSuccessStatusCode)
+                    return new List<Dictionary<string, object?>>();
 
-        var contenido = await respuesta.Content.ReadAsStringAsync();
+                var contenido = await respuesta.Content.ReadAsStringAsync();
 
-        // Si el contenido está vacío, retorna lista vacía
-        if (string.IsNullOrWhiteSpace(contenido))
-            return new List<Dictionary<string, object?>>();
+                if (string.IsNullOrWhiteSpace(contenido))
+                    return new List<Dictionary<string, object?>>();
 
-        var json = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(
-            contenido, _jsonOptions);
+                var json = JsonSerializer.Deserialize<JsonElement>(contenido, _jsonOptions);
 
-        if (json.TryGetProperty("datos", out System.Text.Json.JsonElement datos))
-            return ConvertirDatos(datos);
+                if (json.TryGetProperty("datos", out JsonElement datos))
+                    return ConvertirDatos(datos);
 
-        return new List<Dictionary<string, object?>>();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error al listar {tabla}: {ex.Message}");
-        return new List<Dictionary<string, object?>>();
-    }
-}
+                return new List<Dictionary<string, object?>>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al listar {tabla}: {ex.Message}");
+                return new List<Dictionary<string, object?>>();
+            }
+        }
+
         // ──────────────────────────────────────────────
         // CREAR: POST /api/{tabla}
-        // Envia los datos del formulario como JSON
-        // Devuelve (exito, mensaje) para mostrar al usuario
         // ──────────────────────────────────────────────
         public async Task<(bool exito, string mensaje)> CrearAsync(
             string tabla, Dictionary<string, object?> datos,
@@ -97,7 +85,6 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
 
         // ──────────────────────────────────────────────
         // ACTUALIZAR: PUT /api/{tabla}/{clave}/{valor}
-        // Envia los campos a modificar como JSON
         // ──────────────────────────────────────────────
         public async Task<(bool exito, string mensaje)> ActualizarAsync(
             string tabla, string nombreClave, string valorClave,
@@ -127,7 +114,6 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
 
         // ──────────────────────────────────────────────
         // ELIMINAR: DELETE /api/{tabla}/{clave}/{valor}
-        // Solo necesita la clave primaria para identificar el registro
         // ──────────────────────────────────────────────
         public async Task<(bool exito, string mensaje)> EliminarAsync(
             string tabla, string nombreClave, string valorClave)
@@ -152,7 +138,6 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
 
         // ──────────────────────────────────────────────
         // DIAGNOSTICO: GET /api/diagnostico/conexion
-        // Devuelve info del servidor de BD conectado
         // ──────────────────────────────────────────────
         public async Task<Dictionary<string, string>?> ObtenerDiagnosticoAsync()
         {
@@ -180,10 +165,46 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
         }
 
         // ──────────────────────────────────────────────
+        // EJECUTAR PROCEDIMIENTO ALMACENADO
+        // POST /api/procedimientos/ejecutarsp
+        // ──────────────────────────────────────────────
+        public async Task<List<Dictionary<string, object?>>> EjecutarSPAsync(
+            string nombreSP, Dictionary<string, object?> parametros)
+        {
+            try
+            {
+                // Agrega el nombre del SP al body
+                parametros["nombreSP"] = nombreSP;
+
+                var respuesta = await _http.PostAsJsonAsync(
+                    "/api/procedimientos/ejecutarsp", parametros);
+
+                if (!respuesta.IsSuccessStatusCode)
+                    return new List<Dictionary<string, object?>>();
+
+                var contenido = await respuesta.Content.ReadAsStringAsync();
+
+                if (string.IsNullOrWhiteSpace(contenido))
+                    return new List<Dictionary<string, object?>>();
+
+                var json = JsonSerializer.Deserialize<JsonElement>(contenido, _jsonOptions);
+
+                // El SP devuelve "Resultados" con R mayúscula
+                if (json.TryGetProperty("resultados", out JsonElement datos) ||
+    json.TryGetProperty("Resultados", out datos))
+                    return ConvertirDatos(datos);
+
+                return new List<Dictionary<string, object?>>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error ejecutando SP {nombreSP}: {ex.Message}");
+                return new List<Dictionary<string, object?>>();
+            }
+        }
+
+        // ──────────────────────────────────────────────
         // METODO AUXILIAR: Convierte JsonElement a lista de diccionarios
-        // La API devuelve los datos como JSON generico, este metodo
-        // lo transforma a Dictionary<string, object?> para trabajar
-        // facilmente con @foreach y @bind en Blazor
         // ──────────────────────────────────────────────
         private List<Dictionary<string, object?>> ConvertirDatos(JsonElement datos)
         {
@@ -195,15 +216,14 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
 
                 foreach (var propiedad in fila.EnumerateObject())
                 {
-                    // Convierte cada valor JSON a su tipo .NET correspondiente
                     diccionario[propiedad.Name] = propiedad.Value.ValueKind switch
                     {
                         JsonValueKind.String => propiedad.Value.GetString(),
                         JsonValueKind.Number => propiedad.Value.TryGetInt32(out int i) ? i : propiedad.Value.GetDouble(),
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.Null => null,
-                        _ => propiedad.Value.GetRawText()
+                        JsonValueKind.True   => true,
+                        JsonValueKind.False  => false,
+                        JsonValueKind.Null   => null,
+                        _                    => propiedad.Value.GetRawText()
                     };
                 }
 
