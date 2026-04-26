@@ -1,5 +1,7 @@
 
 @page "/empresa"
+@inject FrontBlazor_AppiGenericaCsharp.Services.AuthService Auth
+@inject NavigationManager Nav
 @rendermode InteractiveServer
 @inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
 
@@ -114,6 +116,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!Auth.EstaAutenticado)
+    {
+       Nav.NavigateTo("/login");
+        return;
+    }
         await CargarRegistros();
     }
 

@@ -1,4 +1,6 @@
 @page "/producto"
+@inject FrontBlazor_AppiGenericaCsharp.Services.AuthService Auth
+@inject NavigationManager Nav
 @rendermode InteractiveServer
 @inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
 
@@ -252,6 +254,11 @@
     // ─── CICLO DE VIDA ─────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
+        if (!Auth.EstaAutenticado)
+    {
+       Nav.NavigateTo("/login", forceLoad: true);
+        return;
+    }
         // Carga en paralelo los productos y las listas de FK
         await Task.WhenAll(
             CargarProductos(),

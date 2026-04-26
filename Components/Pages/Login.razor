@@ -1,0 +1,166 @@
+@page "/login"
+@using FrontBlazor_AppiGenericaCsharp.Components.Layout
+@layout EmptyLayout
+@rendermode InteractiveServer
+@using FrontBlazor_AppiGenericaCsharp.Services
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Iniciar Sesión</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root { --verde:#00C896; --verde-oscuro:#009e76; --fondo:#F4F7F5; --blanco:#ffffff; --texto:#1a2e25; --texto-suave:#6b8c7a; --borde:#d4e6dd; --rojo:#e05252; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+
+    .login-page { font-family:'DM Sans',sans-serif; background:var(--fondo); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+
+    .login-card { background:var(--blanco); border-radius:20px; padding:2.5rem; width:100%; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,0.08); border:1px solid var(--borde); animation:fadeIn 0.3s ease; }
+
+    @@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .login-logo { text-align:center; margin-bottom:2rem; }
+    .login-logo h1 { font-family:'Syne',sans-serif; font-size:1.9rem; font-weight:800; color:var(--texto); }
+    .login-logo h1 span { color:var(--verde); }
+    .login-logo p { font-size:0.88rem; color:var(--texto-suave); margin-top:0.4rem; font-weight:300; }
+
+    .campo { margin-bottom:1.2rem; }
+    .campo label { display:block; font-size:0.78rem; font-weight:500; color:var(--texto-suave); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em; }
+    .campo input { width:100%; padding:0.7rem 1rem; border:1.5px solid var(--borde); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--texto); background:var(--fondo); transition:border 0.2s,background 0.2s; }
+    .campo input:focus { outline:none; border-color:var(--verde); background:white; }
+
+    .campo-password { position:relative; }
+    .campo-password input { padding-right:3rem; }
+    .toggle-password { position:absolute; right:0.9rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--texto-suave); font-size:1rem; padding:0; line-height:1; }
+    .toggle-password:hover { color:var(--verde); }
+
+    .btn-login { width:100%; background:var(--verde); color:white; border:none; padding:0.8rem; border-radius:10px; font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s,transform 0.1s; margin-top:0.5rem; }
+    .btn-login:hover:not(:disabled) { background:var(--verde-oscuro); transform:translateY(-1px); }
+    .btn-login:disabled { opacity:0.65; cursor:not-allowed; }
+
+    .alerta { padding:0.85rem 1rem; border-radius:10px; margin-bottom:1.2rem; font-size:0.88rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+    .alerta.error { background:#fdeaea; color:#b83232; border:1px solid #f5c0c0; }
+    .alerta.exito { background:#e6faf4; color:#007a57; border:1px solid #b3e8d5; }
+
+    .links-bottom { display:flex; flex-direction:column; gap:0.5rem; margin-top:1.2rem; text-align:center; }
+    .link-accion { font-size:0.85rem; color:var(--texto-suave); cursor:pointer; text-decoration:none; }
+    .link-accion:hover { color:var(--verde); }
+    .link-accion.destacado { color:var(--verde); font-weight:600; }
+    .link-accion.destacado:hover { color:var(--verde-oscuro); }
+
+    .separador { text-align:center; color:var(--borde); font-size:0.8rem; margin:0.3rem 0; }
+</style>
+
+<div class="login-page">
+    <div class="login-card">
+
+        <div class="login-logo">
+            <h1>Bienvenido de <span>vuelta</span></h1>
+            <p>Ingresa tus credenciales para continuar</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeAlerta))
+        {
+            <div class="alerta @(esExito ? "exito" : "error")">
+                @(esExito ? "✓" : "✕") @mensajeAlerta
+            </div>
+        }
+
+        <div class="campo">
+            <label>Correo</label>
+            <input type="email" @bind="email" @bind:event="oninput"
+                   placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="campo">
+            <label>Contraseña</label>
+            <div class="campo-password">
+                <input type="@(mostrarPass ? "text" : "password")"
+                       @bind="contrasena" @bind:event="oninput"
+                       placeholder="••••••••" />
+                <button class="toggle-password" type="button"
+                        @onclick="() => mostrarPass = !mostrarPass">
+                    @(mostrarPass ? "🙈" : "👁")
+                </button>
+            </div>
+        </div>
+
+        <button class="btn-login" @onclick="DoLogin" disabled="@cargando">
+            @(cargando ? "Iniciando sesión..." : "Iniciar Sesión →")
+        </button>
+
+        <div class="links-bottom">
+            <span class="link-accion" @onclick='() => Nav.NavigateTo("/recuperar-contrasena")'>
+                ¿Olvidaste tu contraseña?
+            </span>
+            <div class="separador">──────────────</div>
+            <span class="link-accion destacado" @onclick='() => Nav.NavigateTo("/registro")'>
+                ¿No tienes cuenta? Regístrate aquí →
+            </span>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    private string email         = "";
+    private string contrasena    = "";
+    private bool   cargando      = false;
+    private bool   mostrarPass   = false;
+    private string mensajeAlerta = "";
+    private bool   esExito       = false;
+
+    protected override void OnInitialized()
+    {
+        if (Auth.EstaAutenticado)
+            Nav.NavigateTo("/", forceLoad: false);
+    }
+
+    private async Task DoLogin()
+    {
+        mensajeAlerta = "";
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(contrasena))
+        {
+            esExito = false;
+            mensajeAlerta = "Por favor ingresa tu correo y contraseña.";
+            return;
+        }
+
+        cargando = true;
+        StateHasChanged();
+
+        try
+        {
+            var (exito, mensaje) = await Auth.Login(email.Trim(), contrasena);
+            cargando = false;
+
+            if (exito)
+            {
+                esExito = true;
+                mensajeAlerta = "✓ Sesión iniciada, redirigiendo...";
+                StateHasChanged();
+                await Task.Delay(500);
+
+                if (Auth.DebeCambiarContrasena)
+                    Nav.NavigateTo("/cambiar-contrasena", forceLoad: true);
+                else
+                    Nav.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                esExito = false;
+                mensajeAlerta = mensaje;
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            esExito = false;
+            mensajeAlerta = $"Error: {ex.Message}";
+        }
+
+        StateHasChanged();
+    }
+}

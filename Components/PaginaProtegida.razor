@@ -1,0 +1,15 @@
+@inject FrontBlazor_AppiGenericaCsharp.Services.AuthService Auth
+@inject NavigationManager Nav
+@implements IDisposable
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (!Auth.EstaAutenticado)
+        {
+            Nav.NavigateTo("/login", forceLoad: true);
+        }
+    }
+
+    public void Dispose() { }
+}

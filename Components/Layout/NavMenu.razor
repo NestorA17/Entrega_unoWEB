@@ -1,3 +1,6 @@
+@inject FrontBlazor_AppiGenericaCsharp.Services.AuthService Auth
+@inject NavigationManager Nav
+
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">CRUD Mapa Conocimiento</a>
@@ -23,41 +26,75 @@
             </NavLink>
         </div>
 
-       <div class="nav-item px-3">
-    <NavLink class="nav-link" href="proyecto">
-        <span class="bi bi-folder" aria-hidden="true"></span> Proyecto
-    </NavLink>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="proyecto">
+                <span class="bi bi-folder" aria-hidden="true"></span> Proyecto
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="tipoproducto">
+                <span class="bi bi-tag" aria-hidden="true"></span> Tipos de Producto
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="producto">
+                <span class="bi bi-box" aria-hidden="true"></span> Productos
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="desarrolla">
+                <span class="bi bi-person-workspace" aria-hidden="true"></span> Desarrolla
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="aliadoproyecto">
+                <span class="bi bi-link-45deg" aria-hidden="true"></span> Aliado-Proyecto
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="productosporproyecto">
+                <span class="bi bi-search" aria-hidden="true"></span> Productos por Proyecto
+            </NavLink>
+        </div>
+
+        @* Usuario y cerrar sesión *@
+       @if (Auth.TieneAcceso("/gestionusuarios"))
+{
+    <div class="nav-item px-3">
+        <NavLink class="nav-link" href="gestionusuarios">
+            <span class="bi bi-people" aria-hidden="true"></span> Gestión Usuarios
+        </NavLink>
+    </div>
+}
+
+    </nav>
+
+    @if (Auth.EstaAutenticado)
+{
+    <div class="nav-item px-3">
+        <NavLink class="nav-link" href="gestionusuarios">
+            <span class="bi bi-people" aria-hidden="true"></span> Gestión Usuarios
+        </NavLink>
+    </div>
+}
 </div>
 
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="tipoproducto">
-        <span class="bi bi-tag" aria-hidden="true"></span> Tipos de Producto
-    </NavLink>
-</div>
+@code {
+    private async Task CerrarSesion()
+{
+    Auth.Logout();          // limpia el EstadoSesion
+    await Task.Delay(200);  // espera que se limpie
+    Nav.NavigateTo("/login", forceLoad: true);
+    }
 
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="producto">
-        <span class="bi bi-box" aria-hidden="true"></span> Productos
-    </NavLink>
-</div>
+ 
+}
 
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="desarrolla">
-        <span class="bi bi-person-workspace" aria-hidden="true"></span> Desarrolla
-    </NavLink>
-</div>
-
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="aliadoproyecto">
-        <span class="bi bi-link-45deg" aria-hidden="true"></span> Aliado-Proyecto
-    </NavLink>
-</div>
-
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="productosporproyecto">
-        <span class="bi bi-search" aria-hidden="true"></span> Productos por Proyecto
-    </NavLink>
-</div>
 
         @* ── OCULTOS TEMPORALMENTE ──────────────────────────
         <div class="nav-item px-3">
@@ -96,6 +133,3 @@
             </NavLink>
         </div>
         ── FIN OCULTOS ──────────────────────────────────── *@
-
-    </nav>
-</div>

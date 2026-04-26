@@ -1,0 +1,166 @@
+@page "/registro"
+@using FrontBlazor_AppiGenericaCsharp.Components.Layout
+@layout EmptyLayout
+@rendermode InteractiveServer
+@inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>Registro</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root { --verde:#00C896; --verde-oscuro:#009e76; --fondo:#F4F7F5; --blanco:#ffffff; --texto:#1a2e25; --texto-suave:#6b8c7a; --borde:#d4e6dd; --rojo:#e05252; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+
+    .registro-page { font-family:'DM Sans',sans-serif; background:var(--fondo); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+
+    .registro-card { background:var(--blanco); border-radius:20px; padding:2.5rem; width:100%; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,0.08); border:1px solid var(--borde); animation:fadeIn 0.3s ease; }
+
+    @@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .registro-logo { text-align:center; margin-bottom:2rem; }
+    .registro-logo h1 { font-family:'Syne',sans-serif; font-size:1.9rem; font-weight:800; color:var(--texto); }
+    .registro-logo h1 span { color:var(--verde); }
+    .registro-logo p { font-size:0.88rem; color:var(--texto-suave); margin-top:0.4rem; font-weight:300; }
+
+    .campo { margin-bottom:1.2rem; }
+    .campo label { display:block; font-size:0.78rem; font-weight:500; color:var(--texto-suave); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em; }
+    .campo input { width:100%; padding:0.7rem 1rem; border:1.5px solid var(--borde); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--texto); background:var(--fondo); transition:border 0.2s; }
+    .campo input:focus { outline:none; border-color:var(--verde); background:white; }
+
+    .btn-registro { width:100%; background:var(--verde); color:white; border:none; padding:0.8rem; border-radius:10px; font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s,transform 0.1s; margin-top:0.5rem; }
+    .btn-registro:hover:not(:disabled) { background:var(--verde-oscuro); transform:translateY(-1px); }
+    .btn-registro:disabled { opacity:0.65; cursor:not-allowed; }
+
+    .alerta { padding:0.85rem 1rem; border-radius:10px; margin-bottom:1.2rem; font-size:0.88rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+    .alerta.error { background:#fdeaea; color:#b83232; border:1px solid #f5c0c0; }
+    .alerta.exito { background:#e6faf4; color:#007a57; border:1px solid #b3e8d5; }
+
+    .link-login { display:block; text-align:center; margin-top:1.2rem; font-size:0.85rem; color:var(--texto-suave); cursor:pointer; }
+    .link-login:hover { color:var(--verde); }
+
+    .requisitos { font-size:0.8rem; color:var(--texto-suave); margin-bottom:1rem; line-height:1.6; background:#f0faf5; padding:0.8rem; border-radius:8px; border:1px solid var(--borde); }
+</style>
+
+<div class="registro-page">
+    <div class="registro-card">
+
+        <div class="registro-logo">
+            <h1>Crear <span>Cuenta</span></h1>
+            <p>Regístrate para acceder al sistema</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeAlerta))
+        {
+            <div class="alerta @(esExito ? "exito" : "error")">
+                @(esExito ? "✓" : "✕") @mensajeAlerta
+            </div>
+        }
+
+        <div class="requisitos">
+            La contraseña debe tener: mínimo 6 caracteres, al menos 1 mayúscula y al menos 1 número.
+        </div>
+
+        <div class="campo">
+            <label>Correo Electrónico *</label>
+            <input type="email" @bind="email" placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="campo">
+            <label>Contraseña *</label>
+            <input type="password" @bind="contrasena" placeholder="••••••••" />
+        </div>
+
+        <div class="campo">
+            <label>Confirmar Contraseña *</label>
+            <input type="password" @bind="confirmarContrasena" placeholder="••••••••" />
+        </div>
+
+        <button class="btn-registro" @onclick="Registrar" disabled="@cargando">
+            @(cargando ? "Registrando..." : "Crear Cuenta →")
+        </button>
+
+        <span class="link-login" @onclick='() => Nav.NavigateTo("/login")'>
+            ¿Ya tienes cuenta? Inicia sesión
+        </span>
+
+    </div>
+</div>
+
+@code {
+    private string email              = "";
+    private string contrasena         = "";
+    private string confirmarContrasena = "";
+    private bool   cargando           = false;
+    private string mensajeAlerta      = "";
+    private bool   esExito            = false;
+
+    private async Task Registrar()
+    {
+        mensajeAlerta = "";
+
+        // Validaciones
+        if (string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(contrasena) ||
+            string.IsNullOrWhiteSpace(confirmarContrasena))
+        {
+            esExito = false;
+            mensajeAlerta = "Todos los campos son obligatorios.";
+            return;
+        }
+
+        if (contrasena != confirmarContrasena)
+        {
+            esExito = false;
+            mensajeAlerta = "Las contraseñas no coinciden.";
+            return;
+        }
+
+        if (contrasena.Length < 6)
+        {
+            esExito = false;
+            mensajeAlerta = "La contraseña debe tener mínimo 6 caracteres.";
+            return;
+        }
+
+        if (!contrasena.Any(char.IsUpper))
+        {
+            esExito = false;
+            mensajeAlerta = "La contraseña debe incluir al menos una mayúscula.";
+            return;
+        }
+
+        if (!contrasena.Any(char.IsDigit))
+        {
+            esExito = false;
+            mensajeAlerta = "La contraseña debe incluir al menos un número.";
+            return;
+        }
+
+        cargando = true;
+
+        var datos = new Dictionary<string, object?>
+        {
+            ["email"]      = email.Trim(),
+            ["contrasena"] = contrasena
+        };
+
+        var resultado = await Api.CrearAsync("usuario", datos, "contrasena");
+
+        cargando = false;
+
+        if (resultado.exito)
+        {
+            esExito = true;
+            mensajeAlerta = "✓ Cuenta creada. El administrador te asignará un rol pronto.";
+            await Task.Delay(2500);
+            Nav.NavigateTo("/login");
+        }
+        else
+        {
+            esExito = false;
+            mensajeAlerta = "Error al crear la cuenta. El correo puede estar en uso.";
+        }
+    }
+}

@@ -15,7 +15,9 @@ builder.Services.AddScoped(sp => new HttpClient
 
 // Registrar el servicio generico de la API
 builder.Services.AddScoped<FrontBlazor_AppiGenericaCsharp.Services.ApiService>();
-
+builder.Services.AddScoped<FrontBlazor_AppiGenericaCsharp.Services.AuthService>();
+builder.Services.AddSingleton<FrontBlazor_AppiGenericaCsharp.Services.EstadoSesion>();
+builder.Services.AddScoped<FrontBlazor_AppiGenericaCsharp.Services.AuthService>();
 var app = builder.Build();
 
 // Configurar el pipeline HTTP.

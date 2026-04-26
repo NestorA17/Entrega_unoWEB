@@ -1,0 +1,107 @@
+@page "/recuperar-contrasena"
+@using FrontBlazor_AppiGenericaCsharp.Components.Layout
+@layout EmptyLayout
+@inject FrontBlazor_AppiGenericaCsharp.Services.AuthService Auth
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+@using FrontBlazor_AppiGenericaCsharp.Services
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Recuperar Contraseña</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+    :root { --verde:#00C896; --verde-oscuro:#009e76; --fondo:#F4F7F5; --blanco:#ffffff; --texto:#1a2e25; --texto-suave:#6b8c7a; --borde:#d4e6dd; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    .page { font-family:'DM Sans',sans-serif; background:var(--fondo); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+    .card { background:var(--blanco); border-radius:20px; padding:2.5rem; width:100%; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,0.08); border:1px solid var(--borde); }
+    .card h1 { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; color:var(--texto); margin-bottom:0.5rem; }
+    .card h1 span { color:var(--verde); }
+    .card p { font-size:0.88rem; color:var(--texto-suave); margin-bottom:1.5rem; }
+    .campo { margin-bottom:1.2rem; }
+    .campo label { display:block; font-size:0.78rem; font-weight:500; color:var(--texto-suave); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em; }
+    .campo input { width:100%; padding:0.7rem 1rem; border:1.5px solid var(--borde); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--texto); background:var(--fondo); transition:border 0.2s; }
+    .campo input:focus { outline:none; border-color:var(--verde); background:white; }
+    .btn { width:100%; background:var(--verde); color:white; border:none; padding:0.8rem; border-radius:10px; font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; margin-top:0.5rem; }
+    .btn:hover:not(:disabled) { background:var(--verde-oscuro); }
+    .btn:disabled { opacity:0.65; cursor:not-allowed; }
+    .alerta { padding:0.85rem 1rem; border-radius:10px; margin-bottom:1.2rem; font-size:0.88rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+    .alerta.error { background:#fdeaea; color:#b83232; border:1px solid #f5c0c0; }
+    .alerta.exito { background:#e6faf4; color:#007a57; border:1px solid #b3e8d5; }
+    .temporal-box { background:#fff8e1; border:1px solid #f5c842; border-radius:10px; padding:1rem; margin-top:1rem; font-size:0.9rem; color:#7a6000; }
+    .temporal-box strong { font-size:1.1rem; display:block; margin-top:0.3rem; }
+    .link-volver { display:block; text-align:center; margin-top:1.2rem; font-size:0.85rem; color:var(--texto-suave); cursor:pointer; }
+    .link-volver:hover { color:var(--verde); }
+</style>
+
+<div class="page">
+    <div class="card">
+        <h1>Recuperar <span>Contraseña</span></h1>
+        <p>Ingresa tu correo y te enviaremos una contraseña temporal.</p>
+
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="alerta @(exito ? "exito" : "error")">
+                @(exito ? "✓" : "✕") @mensaje
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(contrasenaTemp))
+        {
+            <div class="temporal-box">
+                Tu contraseña temporal es:
+                <strong>@contrasenaTemp</strong>
+                Úsala para iniciar sesión. Se te pedirá cambiarla.
+            </div>
+        }
+
+        @if (!enviado)
+        {
+            <div class="campo">
+                <label>Correo registrado</label>
+                <input type="email" @bind="emailInput" placeholder="correo@ejemplo.com" />
+            </div>
+
+            <button class="btn" @onclick="Recuperar" disabled="@cargando">
+                @(cargando ? "Procesando..." : "Recuperar Contraseña")
+            </button>
+        }
+
+        <span class="link-volver" @onclick='() => Nav.NavigateTo("/login")'>
+            ← Volver al inicio de sesión
+        </span>
+    </div>
+</div>
+
+@code {
+    private string emailInput     = "";
+    private string mensaje        = "";
+    private string contrasenaTemp = "";
+    private bool   exito          = false;
+    private bool   cargando       = false;
+    private bool   enviado        = false;
+
+    private async Task Recuperar()
+    {
+        mensaje = "";
+        contrasenaTemp = "";
+
+        if (string.IsNullOrWhiteSpace(emailInput))
+        { mensaje = "Por favor ingresa tu correo."; return; }
+
+        cargando = true;
+        var (ok, msg, temporal) = await Auth.RecuperarContrasena(emailInput.Trim());
+        cargando = false;
+
+        exito   = ok;
+        mensaje = msg;
+
+        if (ok)
+        {
+            enviado = true;
+            if (!string.IsNullOrEmpty(temporal))
+                contrasenaTemp = temporal;
+        }
+    }
+}

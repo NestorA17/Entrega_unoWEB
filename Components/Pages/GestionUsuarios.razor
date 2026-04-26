@@ -1,0 +1,340 @@
+@page "/gestionusuarios"
+@rendermode InteractiveServer
+@inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
+@inject FrontBlazor_AppiGenericaCsharp.Services.AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Gestión de Usuarios</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root { --azul:#3B82F6; --azul-oscuro:#2563EB; --fondo:#F4F7FA; --blanco:#ffffff; --texto:#1a2535; --texto-suave:#6b7fa3; --borde:#d4dde6; --rojo:#e05252; --verde:#22c55e; }
+
+    .gu-wrapper { font-family:'DM Sans',sans-serif; background-color:var(--fondo); min-height:100vh; padding:2rem; color:var(--texto); }
+
+    .gu-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:2rem; padding-bottom:1.5rem; border-bottom:2px solid var(--borde); }
+    .gu-header h1 { font-family:'Syne',sans-serif; font-size:2.2rem; font-weight:800; color:var(--texto); margin:0; line-height:1; }
+    .gu-header h1 span { color:var(--azul); }
+    .gu-header p { margin:0.3rem 0 0; font-size:0.9rem; color:var(--texto-suave); font-weight:300; }
+
+    .alerta { padding:0.9rem 1.2rem; border-radius:10px; margin-bottom:1.5rem; font-size:0.9rem; font-weight:500; }
+    .alerta.exito { background:#e6f9ee; color:#15803d; border:1px solid #bbf7d0; }
+    .alerta.error { background:#fdeaea; color:#b83232; border:1px solid #f5c0c0; }
+
+    .tabla-card { background:var(--blanco); border-radius:16px; border:1px solid var(--borde); overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+    table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+    thead { background-color:var(--texto); color:white; }
+    thead th { padding:1rem 1.2rem; text-align:left; font-family:'Syne',sans-serif; font-weight:600; font-size:0.8rem; letter-spacing:0.05em; text-transform:uppercase; }
+    tbody tr { border-bottom:1px solid var(--borde); transition:background 0.15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background-color:#f0f6ff; }
+    tbody td { padding:0.9rem 1.2rem; color:var(--texto); vertical-align:middle; }
+
+    .email-badge { font-family:'Syne',sans-serif; font-weight:700; font-size:0.82rem; background:#dbeafe; color:var(--azul-oscuro); padding:0.2rem 0.6rem; border-radius:6px; display:inline-block; }
+    .sin-rol { background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:0.15rem 0.6rem; border-radius:20px; font-size:0.78rem; font-weight:500; }
+    .con-rol { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; padding:0.15rem 0.6rem; border-radius:20px; font-size:0.78rem; font-weight:500; }
+
+    .acciones { display:flex; gap:0.5rem; }
+    .btn-asignar { background:#dbeafe; color:var(--azul-oscuro); border:1px solid #bfdbfe; padding:0.35rem 0.8rem; border-radius:7px; font-size:0.8rem; font-weight:500; cursor:pointer; }
+    .btn-asignar:hover { background:#bfdbfe; }
+    .btn-eliminar { background:#fdeaea; color:var(--rojo); border:1px solid #f5c0c0; padding:0.35rem 0.8rem; border-radius:7px; font-size:0.8rem; font-weight:500; cursor:pointer; }
+    .btn-eliminar:hover { background:#fbd5d5; }
+
+    .sin-datos { text-align:center; padding:3rem; color:var(--texto-suave); font-size:0.95rem; }
+    .cargando { text-align:center; padding:3rem; color:var(--texto-suave); }
+
+    .modal-overlay { position:fixed !important; inset:0 !important; background:rgba(0,0,0,0.35) !important; display:flex !important; align-items:center !important; justify-content:center !important; z-index:9999 !important; }
+    .modal { background:var(--blanco) !important; border-radius:18px !important; padding:2rem !important; width:90% !important; max-width:480px !important; box-shadow:0 20px 60px rgba(0,0,0,0.15) !important; animation:slideUp 0.25s ease; display:block !important; visibility:visible !important; z-index:10000 !important; position:relative !important; }
+
+    @@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+    .modal h2 { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin:0 0 0.5rem; color:var(--texto); }
+    .modal h2 span { color:var(--azul); }
+    .modal p { color:var(--texto-suave); font-size:0.9rem; margin-bottom:1.5rem; }
+
+    .campo { margin-bottom:1.1rem !important; display:block !important; }
+    .campo label { display:block !important; font-size:0.8rem !important; font-weight:500 !important; color:var(--texto-suave) !important; margin-bottom:0.4rem !important; text-transform:uppercase !important; letter-spacing:0.04em !important; }
+    .campo select { width:100% !important; padding:0.65rem 0.9rem !important; border:1.5px solid var(--borde) !important; border-radius:9px !important; font-family:'DM Sans',sans-serif !important; font-size:0.9rem !important; color:var(--texto) !important; background:var(--fondo) !important; box-sizing:border-box !important; display:block !important; visibility:visible !important; opacity:1 !important; height:auto !important; min-height:40px !important; }
+    .campo select:focus { outline:none !important; border-color:var(--azul) !important; background:white !important; }
+
+    .modal-acciones { display:flex !important; gap:0.8rem !important; margin-top:1.5rem !important; justify-content:flex-end !important; }
+    .btn-guardar { background:var(--azul) !important; color:white !important; border:none !important; padding:0.65rem 1.5rem !important; border-radius:9px !important; font-family:'Syne',sans-serif !important; font-weight:700 !important; font-size:0.9rem !important; cursor:pointer !important; }
+    .btn-guardar:hover { background:var(--azul-oscuro) !important; }
+    .btn-guardar:disabled { opacity:0.6 !important; cursor:not-allowed !important; }
+    .btn-cancelar { background:transparent !important; color:var(--texto-suave) !important; border:1.5px solid var(--borde) !important; padding:0.65rem 1.2rem !important; border-radius:9px !important; font-size:0.9rem !important; cursor:pointer !important; }
+
+    .modal-confirmar p { color:var(--texto-suave) !important; font-size:0.93rem !important; margin:0.5rem 0 1.5rem !important; }
+    .modal-confirmar strong { color:var(--texto) !important; }
+    .btn-confirmar-eliminar { background:var(--rojo) !important; color:white !important; border:none !important; padding:0.65rem 1.5rem !important; border-radius:9px !important; font-family:'Syne',sans-serif !important; font-weight:700 !important; font-size:0.9rem !important; cursor:pointer !important; }
+    .btn-confirmar-eliminar:hover { background:#c94040 !important; }
+</style>
+
+<div class="gu-wrapper">
+
+    <div class="gu-header">
+        <div>
+            <h1>Gestión de <span>Usuarios</span></h1>
+            <p>Administra usuarios y asigna roles del sistema</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeAlerta))
+    {
+        <div class="alerta @(esExito ? "exito" : "error")">
+            @(esExito ? "✓" : "✕") @mensajeAlerta
+        </div>
+    }
+
+    <div class="tabla-card">
+        @if (cargando)
+        {
+            <div class="cargando">Cargando usuarios...</div>
+        }
+        else if (usuarios.Count == 0)
+        {
+            <div class="sin-datos">No hay usuarios registrados aún.</div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Rol Asignado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var usuario in usuarios)
+                    {
+                        string email = Valor(usuario, "email");
+                        string rolActual = ObtenerRolUsuario(email);
+                        <tr>
+                            <td><span class="email-badge">@email</span></td>
+                            <td>
+                                @if (string.IsNullOrEmpty(rolActual))
+                                {
+                                    <span class="sin-rol">Sin rol asignado</span>
+                                }
+                                else
+                                {
+                                    <span class="con-rol">@rolActual</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="acciones">
+                                    <button class="btn-asignar"
+                                            @onclick="() => AbrirModalAsignarRol(email, rolActual)">
+                                        👤 Asignar Rol
+                                    </button>
+                                    @if (email != Auth.EmailUsuario)
+                                    {
+                                        <button class="btn-eliminar"
+                                                @onclick="() => AbrirModalEliminar(email)">
+                                            ✕ Eliminar
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    @* MODAL ASIGNAR ROL *@
+    @if (mostrarModalRol)
+    {
+        <div class="modal-overlay">
+            <div class="modal">
+                <h2>Asignar <span>Rol</span></h2>
+                <p>Usuario: <strong>@emailSeleccionado</strong></p>
+
+                <div class="campo">
+                    <label>Rol *</label>
+                    <select @bind="rolSeleccionado">
+                        <option value="">-- Seleccionar rol --</option>
+                        @foreach (var rol in listaRoles)
+                        {
+                            <option value="@Valor(rol, "id")">@Valor(rol, "nombre")</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="() => mostrarModalRol = false">Cancelar</button>
+                    <button class="btn-guardar" @onclick="AsignarRol" disabled="@guardando">
+                        @(guardando ? "Guardando..." : "Asignar")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* MODAL CONFIRMAR ELIMINAR *@
+    @if (mostrarModalEliminar)
+    {
+        <div class="modal-overlay">
+            <div class="modal modal-confirmar">
+                <h2>Eliminar <span>Usuario</span></h2>
+                <p>¿Estás seguro de eliminar a <strong>@emailEliminar</strong>?</p>
+                <div class="modal-acciones">
+                    <button class="btn-cancelar" @onclick="() => mostrarModalEliminar = false">Cancelar</button>
+                    <button class="btn-confirmar-eliminar" @onclick="EliminarUsuario" disabled="@guardando">
+                        @(guardando ? "Eliminando..." : "Sí, eliminar")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<Dictionary<string, object?>> usuarios    = new();
+    private List<Dictionary<string, object?>> listaRoles  = new();
+    private List<Dictionary<string, object?>> rolUsuarios = new();
+    private bool   cargando            = true;
+    private bool   mostrarModalRol     = false;
+    private bool   mostrarModalEliminar = false;
+    private bool   guardando           = false;
+    private string mensajeAlerta       = "";
+    private bool   esExito             = true;
+    private string emailSeleccionado   = "";
+    private string rolSeleccionado     = "";
+    private string emailEliminar       = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.EstaAutenticado)
+        {
+            Nav.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+        await Task.WhenAll(CargarDatos());
+    }
+
+    private async Task CargarDatos()
+    {
+        cargando = true;
+        usuarios    = await Api.ListarAsync("usuario");
+        listaRoles  = await Api.ListarAsync("rol");
+        rolUsuarios = await Api.ListarAsync("rol_usuario");
+        cargando = false;
+    }
+
+    private string Valor(Dictionary<string, object?> fila, string clave)
+        => fila.TryGetValue(clave, out var val) ? val?.ToString() ?? "" : "";
+
+    private string ObtenerRolUsuario(string email)
+    {
+        // Buscar el rol_usuario del email
+        var rolUsu = rolUsuarios.FirstOrDefault(x => Valor(x, "fkemail") == email);
+        if (rolUsu == null) return "";
+
+        string idRol = Valor(rolUsu, "fkidrol");
+        var rol = listaRoles.FirstOrDefault(x => Valor(x, "id") == idRol);
+        return rol != null ? Valor(rol, "nombre") : "";
+    }
+
+    private void MostrarAlerta(bool exito, string mensaje)
+    {
+        esExito = exito;
+        mensajeAlerta = mensaje;
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            mensajeAlerta = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void AbrirModalAsignarRol(string email, string rolActual)
+    {
+        emailSeleccionado = email;
+        // Preseleccionar el rol actual si tiene
+        var rolUsu = rolUsuarios.FirstOrDefault(x => Valor(x, "fkemail") == email);
+        rolSeleccionado = rolUsu != null ? Valor(rolUsu, "fkidrol") : "";
+        mostrarModalRol = true;
+    }
+
+    private void AbrirModalEliminar(string email)
+    {
+        emailEliminar = email;
+        mostrarModalEliminar = true;
+    }
+
+    private async Task AsignarRol()
+    {
+        if (string.IsNullOrWhiteSpace(rolSeleccionado))
+        {
+            MostrarAlerta(false, "Debes seleccionar un rol.");
+            return;
+        }
+
+        guardando = true;
+
+        // Verificar si ya tiene un rol asignado
+        var rolExistente = rolUsuarios.FirstOrDefault(
+            x => Valor(x, "fkemail") == emailSeleccionado);
+
+        (bool exito, string mensaje) resultado;
+
+        if (rolExistente != null)
+        {
+            // Actualizar el rol existente
+            string idRolUsuario = Valor(rolExistente, "id");
+            var datos = new Dictionary<string, object?>
+            {
+                ["fkemail"] = emailSeleccionado,
+                ["fkidrol"] = int.Parse(rolSeleccionado)
+            };
+            resultado = await Api.ActualizarAsync(
+                "rol_usuario", "fkemail", emailSeleccionado, datos);
+        }
+        else
+        {
+            // Crear nueva asignación
+            var datos = new Dictionary<string, object?>
+            {
+                ["fkemail"] = emailSeleccionado,
+                ["fkidrol"] = int.Parse(rolSeleccionado)
+            };
+            resultado = await Api.CrearAsync("rol_usuario", datos);
+        }
+
+        guardando = false;
+        mostrarModalRol = false;
+        MostrarAlerta(resultado.exito,
+            resultado.exito ? "Rol asignado correctamente." : resultado.mensaje);
+
+        if (resultado.exito)
+            await CargarDatos();
+    }
+
+    private async Task EliminarUsuario()
+    {
+        guardando = true;
+
+        // Primero eliminar sus roles
+        var rolUsu = rolUsuarios.FirstOrDefault(
+            x => Valor(x, "fkemail") == emailEliminar);
+
+        if (rolUsu != null)
+        {
+            await Api.EliminarAsync("rol_usuario", "fkemail", emailEliminar);
+        }
+
+        // Luego eliminar el usuario
+        var resultado = await Api.EliminarAsync("usuario", "email", emailEliminar);
+
+        guardando = false;
+        mostrarModalEliminar = false;
+        MostrarAlerta(resultado.exito,
+            resultado.exito ? "Usuario eliminado correctamente." : resultado.mensaje);
+
+        if (resultado.exito)
+            await CargarDatos();
+    }
+}

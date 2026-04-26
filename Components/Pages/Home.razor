@@ -1,6 +1,8 @@
 @page "/"
+@rendermode InteractiveServer
 @inject FrontBlazor_AppiGenericaCsharp.Services.ApiService Api
-
+@inject FrontBlazor_AppiGenericaCsharp.Services.AuthService Auth
+@inject NavigationManager Nav
 <PageTitle>CRUD Mapa Conocimiento</PageTitle>
 
 <div class="container mt-4">
@@ -83,6 +85,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!Auth.EstaAutenticado)
+    {
+        Nav.NavigateTo("/login", forceLoad: true);
+        return;
+    }
         diagnostico = await Api.ObtenerDiagnosticoAsync();
         cargado = true;
     }
