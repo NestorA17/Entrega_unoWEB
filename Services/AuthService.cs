@@ -93,7 +93,10 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
 
                 // Si no tiene rutas asignadas dar acceso básico
                 if (!rutas.Any())
-                    rutas.Add("/");
+{
+    return (false, "Tu cuenta no tiene un rol asignado. Contacta al administrador.");
+}
+
 
                 // 4. Guardar en el estado singleton
                 _estado.EstaAutenticado       = true;
@@ -266,11 +269,12 @@ namespace FrontBlazor_AppiGenericaCsharp.Services
         // VERIFICAR ACCESO A RUTA
         // ──────────────────────────────────────────────────
         public bool TieneAcceso(string ruta)
-        {
-            if (!_estado.EstaAutenticado) return false;
-            return _estado.RutasPermitidas.Contains(ruta) ||
-                   _estado.RutasPermitidas.Contains("/");
-        }
+{
+    if (!_estado.EstaAutenticado) return false;
+    // Ya no damos acceso genérico con "/"
+    // Solo verificamos si la ruta específica está en la lista
+    return _estado.RutasPermitidas.Contains(ruta);
+}
 
         // ──────────────────────────────────────────────────
         // CERRAR SESIÓN

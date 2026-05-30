@@ -252,19 +252,19 @@
     private string nombreEliminar = "";
 
     // ─── CICLO DE VIDA ─────────────────────────────────
-    protected override async Task OnInitializedAsync()
+    // ✅ CORRECTO
+protected override async Task OnInitializedAsync()
+{
+    if (!Auth.EstaAutenticado || !Auth.TieneAcceso("/producto"))
     {
-        if (!Auth.EstaAutenticado)
-    {
-       Nav.NavigateTo("/login", forceLoad: true);
+        Nav.NavigateTo("/login", forceLoad: true);
         return;
     }
-        // Carga en paralelo los productos y las listas de FK
-        await Task.WhenAll(
-            CargarProductos(),
-            CargarListasFK()
-        );
-    }
+    await Task.WhenAll(
+        CargarProductos(),
+        CargarListasFK()
+    );
+}
 
     private async Task CargarProductos()
     {

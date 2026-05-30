@@ -236,15 +236,17 @@
     private string idEliminar = "";
     private string nombreEliminar = "";
 
-    protected override async Task OnInitializedAsync()
+    // ✅ CORRECTO
+protected override async Task OnInitializedAsync()
+{
+    if (!Auth.EstaAutenticado || !Auth.TieneAcceso("/tipoproducto"))
     {
-        if (!Auth.EstaAutenticado)
-    {
-       Nav.NavigateTo("/login", forceLoad: true);
+        Nav.NavigateTo("/login", forceLoad: true);
         return;
     }
-        await CargarTipos();
-    }
+    await CargarTipos();
+}
+    
 
     private async Task CargarTipos()
     {
@@ -347,4 +349,6 @@
         if (resultado.exito)
             await CargarTipos();
     }
+
+
 }

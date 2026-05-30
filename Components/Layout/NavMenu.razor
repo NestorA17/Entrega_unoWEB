@@ -12,87 +12,110 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
 
-        @* Link a la pagina de inicio *@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
 
-        @* Módulo Mapa de Conocimiento *@
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="aliado">
-                <span class="bi bi-people" aria-hidden="true"></span> Aliados
-            </NavLink>
-        </div>
+        @if (Auth.TieneAcceso("/aliado"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="aliado">
+                    <span class="bi bi-people" aria-hidden="true"></span> Aliados
+                </NavLink>
+            </div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="proyecto">
-                <span class="bi bi-folder" aria-hidden="true"></span> Proyecto
-            </NavLink>
-        </div>
+        @if (Auth.TieneAcceso("/proyecto"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="proyecto">
+                    <span class="bi bi-folder" aria-hidden="true"></span> Proyecto
+                </NavLink>
+            </div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tipoproducto">
-                <span class="bi bi-tag" aria-hidden="true"></span> Tipos de Producto
-            </NavLink>
-        </div>
+        @if (Auth.TieneAcceso("/tipoproducto"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="tipoproducto">
+                    <span class="bi bi-tag" aria-hidden="true"></span> Tipos de Producto
+                </NavLink>
+            </div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="producto">
-                <span class="bi bi-box" aria-hidden="true"></span> Productos
-            </NavLink>
-        </div>
+        @if (Auth.TieneAcceso("/producto"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="producto">
+                    <span class="bi bi-box" aria-hidden="true"></span> Productos
+                </NavLink>
+            </div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="desarrolla">
-                <span class="bi bi-person-workspace" aria-hidden="true"></span> Desarrolla
-            </NavLink>
-        </div>
+        @if (Auth.TieneAcceso("/desarrolla"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="desarrolla">
+                    <span class="bi bi-person-workspace" aria-hidden="true"></span> Desarrolla
+                </NavLink>
+            </div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="aliadoproyecto">
-                <span class="bi bi-link-45deg" aria-hidden="true"></span> Aliado-Proyecto
-            </NavLink>
-        </div>
+        @if (Auth.TieneAcceso("/aliadoproyecto"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="aliadoproyecto">
+                    <span class="bi bi-link-45deg" aria-hidden="true"></span> Aliado-Proyecto
+                </NavLink>
+            </div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="productosporproyecto">
-                <span class="bi bi-search" aria-hidden="true"></span> Productos por Proyecto
-            </NavLink>
-        </div>
+        @if (Auth.TieneAcceso("/productosporproyecto"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="productosporproyecto">
+                    <span class="bi bi-search" aria-hidden="true"></span> Productos por Proyecto
+                </NavLink>
+            </div>
+        }
 
-        @* Usuario y cerrar sesión *@
-       @if (Auth.TieneAcceso("/gestionusuarios"))
-{
-    <div class="nav-item px-3">
-        <NavLink class="nav-link" href="gestionusuarios">
-            <span class="bi bi-people" aria-hidden="true"></span> Gestión Usuarios
-        </NavLink>
-    </div>
-}
+        @if (Auth.TieneAcceso("/gestionusuarios"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="gestionusuarios">
+                    <span class="bi bi-people" aria-hidden="true"></span> Gestión Usuarios
+                </NavLink>
+            </div>
+        }
+
+        @if (Auth.EstaAutenticado)
+        {
+            <div class="nav-item px-3 mt-3" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:0.5rem;">
+                <div class="nav-link text-muted small">
+                    👤 @Auth.EmailUsuario
+                </div>
+            </div>
+            <div class="nav-item px-3">
+                <button class="nav-link text-danger"
+        style="cursor:pointer; background:none; border:none; width:100%; text-align:left;"
+        @onclick="CerrarSesion">
+    🚪 Cerrar Sesión
+</button>
+            </div>
+        }
 
     </nav>
-
-    @if (Auth.EstaAutenticado)
-{
-    <div class="nav-item px-3">
-        <NavLink class="nav-link" href="gestionusuarios">
-            <span class="bi bi-people" aria-hidden="true"></span> Gestión Usuarios
-        </NavLink>
-    </div>
-}
 </div>
+
 
 @code {
     private async Task CerrarSesion()
 {
-    Auth.Logout();          // limpia el EstadoSesion
-    await Task.Delay(200);  // espera que se limpie
-    Nav.NavigateTo("/login", forceLoad: true);
-    }
-
- 
+    Console.WriteLine("CLICK CERRAR SESION");
+    await Task.Delay(100);
+}
 }
 
 

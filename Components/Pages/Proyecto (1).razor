@@ -260,14 +260,15 @@
     private string tituloEliminar = "";
 
     protected override async Task OnInitializedAsync()
+{
+    if (!Auth.EstaAutenticado || !Auth.TieneAcceso("/proyecto"))
     {
-        if (!Auth.EstaAutenticado)
-    {
-       Nav.NavigateTo("/login", forceLoad: true);
+        Nav.NavigateTo("/login", forceLoad: true);
         return;
     }
-        await CargarProyectos();
-    }
+
+    await CargarProyectos();
+}
 
     private async Task CargarProyectos()
     {

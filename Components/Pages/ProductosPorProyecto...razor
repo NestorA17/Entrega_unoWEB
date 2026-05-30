@@ -145,22 +145,31 @@
 @code {
     private List<Dictionary<string, object?>> listaProyectos = new();
     private List<Dictionary<string, object?>> resultados = new();
+
     private string proyectoSeleccionado = "";
     private bool buscando = false;
     private bool busquedaRealizada = false;
 
     protected override async Task OnInitializedAsync()
     {
-        if (!Auth.EstaAutenticado)
-    {
-       Nav.NavigateTo("/login", forceLoad: true);
-        return;
+        if (!Auth.EstaAutenticado || !Auth.TieneAcceso("/productosporproyecto"))
+        {
+            Nav.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        await CargarProyectos();
     }
+
+    private async Task CargarProyectos()
+    {
         listaProyectos = await Api.ListarAsync("proyecto");
     }
 
     private string Valor(Dictionary<string, object?> fila, string clave)
-        => fila.TryGetValue(clave, out var val) ? val?.ToString() ?? "" : "";
+        => fila.TryGetValue(clave, out var val)
+            ? val?.ToString() ?? ""
+            : "";
 
     private async Task BuscarProductos()
     {
@@ -171,13 +180,21 @@
         busquedaRealizada = true;
         resultados = new();
 
-        var parametros = new Dictionary<string, object?>
+        try
         {
-            ["proyecto_id"] = int.Parse(proyectoSeleccionado)
-        };
+            var parametros = new Dictionary<string, object?>
+            {
+                ["proyecto_id"] = int.Parse(proyectoSeleccionado)
+            };
 
-        resultados = await Api.EjecutarSPAsync("sp_ProductosPorProyecto", parametros);
-
-        buscando = false;
+            resultados = await Api.EjecutarSPAsync(
+                "sp_ProductosPorProyecto",
+                parametros
+            );
+        }
+        finally
+        {
+            buscando = false;
+        }
     }
 }

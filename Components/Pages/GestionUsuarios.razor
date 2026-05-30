@@ -207,14 +207,15 @@
     private string emailEliminar       = "";
 
     protected override async Task OnInitializedAsync()
+{
+    if (!Auth.EstaAutenticado || !Auth.TieneAcceso("gestionusuarios"))
     {
-        if (!Auth.EstaAutenticado)
-        {
-            Nav.NavigateTo("/login", forceLoad: true);
-            return;
-        }
-        await Task.WhenAll(CargarDatos());
+        Nav.NavigateTo("/login", forceLoad: true);
+        return;
     }
+
+    await CargarDatos();
+}
 
     private async Task CargarDatos()
     {

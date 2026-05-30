@@ -209,17 +209,16 @@
     private string nombreEliminar = "";
 
     protected override async Task OnInitializedAsync()
+{
+    if (!Auth.EstaAutenticado || !Auth.TieneAcceso("/aliadoporproyecto"))
     {
-        if (!Auth.EstaAutenticado)
-    {
-      Nav.NavigateTo("/login", forceLoad: true);
+        Nav.NavigateTo("/login", forceLoad: true);
         return;
     }
-        await Task.WhenAll(
-            CargarRegistros(),
-            CargarListasFK()
-        );
-    }
+
+    await CargarRegistros();
+    await CargarListasFK();
+}
 
     private async Task CargarRegistros()
     {

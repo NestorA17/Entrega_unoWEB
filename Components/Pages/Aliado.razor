@@ -518,15 +518,15 @@
     private string nitEliminar = "";
 
     // ─── CICLO DE VIDA ─────────────────────────────────
-    protected override async Task OnInitializedAsync()
+   protected override async Task OnInitializedAsync()
+{
+    if (!Auth.EstaAutenticado || !Auth.TieneAcceso("/aliado"))
     {
-        if (!Auth.EstaAutenticado)
-    {
-       Nav.NavigateTo("/login", forceLoad: true);
+        Nav.NavigateTo("/login", forceLoad: true);
         return;
     }
-        await CargarAliados();
-    }
+    await CargarAliados();
+}
 
     private async Task CargarAliados()
     {
